@@ -1,0 +1,330 @@
+{
+  "skills": [
+    {
+      "name": "Declare Incident Form UI",
+      "tool": "React",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            {
+              "title": "",
+              "summary": "",
+              "severity": "",
+              "components": []
+            }
+          ],
+          "name": "flags all missing required fields",
+          "expect": {
+            "contains": {
+              "title": "string",
+              "summary": "string",
+              "severity": "string",
+              "components": "string"
+            }
+          },
+          "export": "validateDeclareIncidentForm",
+          "module": "client/src/validators/incidentFormValidator.js"
+        },
+        {
+          "args": [
+            {
+              "title": "API latency spike",
+              "summary": "Elevated p99 latency on API gateway",
+              "severity": "SEV1",
+              "components": [
+                "api"
+              ]
+            }
+          ],
+          "name": "passes with all fields populated",
+          "expect": {
+            "equals": {}
+          },
+          "export": "validateDeclareIncidentForm",
+          "module": "client/src/validators/incidentFormValidator.js"
+        }
+      ],
+      "capability": "Builds the internal dashboard's declare-incident form with title, severity single-select, affected-components multi-select, and summary, enforcing that all fields are required before submission.",
+      "dependencies": [],
+      "prompt_template": "You are a frontend engineer building the Declare Incident form for Pulseboard's internal dashboard. Render fields for title (text), severity (single-select from SEV1/SEV2/SEV3), affected components (multi-select requiring at least one selection), and summary (text), keeping the submit action disabled until every field passes validation. Extract the validation logic into a standalone, reusable function so it can be unit tested independently of the rendered form.",
+      "acceptance_criteria": [
+        "Form renders required inputs for title, severity single-select, affected-components multi-select, and summary",
+        "Submit is blocked while any required field is empty or the components selection is empty",
+        "validateDeclareIncidentForm returns a field-keyed error object when required fields are missing and an empty object when the input is valid"
+      ]
+    },
+    {
+      "name": "Declare Incident API Endpoint",
+      "tool": "Express REST API",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            {
+              "state": "resolved",
+              "title": "Checkout errors",
+              "summary": "Elevated 500s on checkout",
+              "severity": "SEV2",
+              "components": [
+                "checkout"
+              ]
+            }
+          ],
+          "name": "forces new incidents into open state",
+          "expect": {
+            "contains": {
+              "state": "open"
+            }
+          },
+          "export": "createIncident",
+          "module": "server/services/incidentService.js"
+        }
+      ],
+      "capability": "Implements the POST /api/incidents endpoint that server-side validates the declare-incident payload and persists a new incident forced into the 'open' state.",
+      "dependencies": [],
+      "prompt_template": "You are a backend engineer implementing the incident creation endpoint for Pulseboard's Express REST API. POST /api/incidents must reject payloads missing title, severity, at least one affected component, or summary with a 400 and validation errors, and on success must always create the incident with state 'open' regardless of any state value supplied by the client. Persist the incident against the shared data store used by both the dashboard and public status page so it is immediately queryable by both.",
+      "acceptance_criteria": [
+        "POST /api/incidents with a valid payload returns 201 and the created incident with state 'open'",
+        "POST /api/incidents with a missing required field returns 400 with per-field validation errors",
+        "createIncident always sets state to 'open' even if a different state is passed in the input"
+      ]
+    },
+    {
+      "name": "Incident State Machine Logic",
+      "tool": "Node.js state machine module",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            "open",
+            "investigating"
+          ],
+          "name": "allows the next sequential state",
+          "expect": {
+            "equals": true
+          },
+          "export": "isValidTransition",
+          "module": "server/services/incidentStateMachine.js"
+        },
+        {
+          "args": [
+            "open",
+            "resolved"
+          ],
+          "name": "rejects skipping a state",
+          "expect": {
+            "equals": false
+          },
+          "export": "isValidTransition",
+          "module": "server/services/incidentStateMachine.js"
+        },
+        {
+          "args": [
+            "resolved",
+            "investigating"
+          ],
+          "name": "rejects reopening a resolved incident",
+          "expect": {
+            "equals": false
+          },
+          "export": "isValidTransition",
+          "module": "server/services/incidentStateMachine.js"
+        }
+      ],
+      "capability": "Implements the pure state-transition rules for incidents, allowing only sequential forward moves open→investigating→identified→resolved and rejecting any skip or reopen.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the core incident state machine for Pulseboard. Write a pure function that, given a current state and a requested next state, returns true only if the requested state is the single next step in the sequence open→investigating→identified→resolved, and false for any skip (e.g. open→identified) or any backward/reopen transition (e.g. resolved→investigating). This module must have no side effects so it can be reused by both the transition API and the dashboard UI.",
+      "acceptance_criteria": [
+        "isValidTransition returns true for each adjacent forward pair in open→investigating→identified→resolved",
+        "isValidTransition returns false for any transition that skips a state",
+        "isValidTransition returns false for any transition that moves backward from a later state to an earlier one"
+      ]
+    },
+    {
+      "name": "State Transition API Endpoint",
+      "tool": "Express REST API",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [],
+      "capability": "Implements the PATCH /api/incidents/:id/state endpoint that applies the state machine, persists valid transitions, and rejects invalid ones with an API error.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are wiring the incident state-transition endpoint into Pulseboard's Express API. PATCH /api/incidents/:id/state should call the shared isValidTransition state-machine function; on a valid transition it updates the incident's state and returns 200 with the updated incident, and on an invalid transition (skip or reopen) it returns a 4xx error with a descriptive message and leaves the stored incident unchanged. This endpoint's writes are the single source of truth the public status page reads from.",
+      "acceptance_criteria": [
+        "PATCH /api/incidents/:id/state with the next valid state returns 200 and the updated incident",
+        "PATCH /api/incidents/:id/state with an invalid (skipped or backward) state returns a 4xx error and does not mutate the stored incident"
+      ]
+    },
+    {
+      "name": "State Transition UI Controls",
+      "tool": "React",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            "open"
+          ],
+          "name": "returns the next state for an open incident",
+          "expect": {
+            "equals": "investigating"
+          },
+          "export": "getAvailableAction",
+          "module": "client/src/utils/stateTransitionHelpers.js"
+        },
+        {
+          "args": [
+            "resolved"
+          ],
+          "name": "returns null once resolved",
+          "expect": {
+            "equals": null
+          },
+          "export": "getAvailableAction",
+          "module": "client/src/utils/stateTransitionHelpers.js"
+        }
+      ],
+      "capability": "Renders the dashboard's state chip/action control that only ever offers the single next valid state as an actionable transition and disables skip/reopen actions.",
+      "dependencies": [
+        "SKILL_004"
+      ],
+      "prompt_template": "You are building the incident state control on Pulseboard's internal dashboard. Given an incident's current state, render only the single next valid action (e.g. 'Mark as Investigating' when state is 'open'), calling the PATCH state endpoint on click and updating the displayed state chip from the response; show no action at all once state is 'resolved'. Derive which action to show from a small pure helper so it can be tested without rendering.",
+      "acceptance_criteria": [
+        "Component renders only the one next valid state as an actionable button, never a skipped or backward state",
+        "Clicking the action calls the PATCH state endpoint and updates the chip to reflect the new state on success",
+        "getAvailableAction returns the sole next state for open/investigating/identified and null for resolved"
+      ]
+    },
+    {
+      "name": "Public Status Banner Sync",
+      "tool": "Node.js service function",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [
+            []
+          ],
+          "name": "reports operational with no active incidents",
+          "expect": {
+            "equals": "operational"
+          },
+          "export": "computeBannerStatus",
+          "module": "server/services/statusPageService.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "SEV2"
+              },
+              {
+                "id": 2,
+                "severity": "SEV1"
+              }
+            ]
+          ],
+          "name": "reports the highest severity among active incidents",
+          "expect": {
+            "equals": "SEV1"
+          },
+          "export": "computeBannerStatus",
+          "module": "server/services/statusPageService.js"
+        }
+      ],
+      "capability": "Computes the public status page's overall banner state from the live set of active incidents, returning operational when none are active or the highest-severity active incident's severity otherwise.",
+      "dependencies": [
+        "SKILL_004"
+      ],
+      "prompt_template": "You are implementing the banner status computation for Pulseboard's public status page. Write a pure function that takes the current list of active (non-resolved) incidents and returns 'operational' when the list is empty, or the severity of the highest-severity incident in the list (SEV1 outranking SEV2 outranking SEV3) when one or more are active. This function must be called fresh on every read of the public status endpoint so resolving an incident is reflected with zero delay and no caching.",
+      "acceptance_criteria": [
+        "computeBannerStatus returns 'operational' when given an empty active-incident list",
+        "computeBannerStatus returns the highest-severity value when given multiple active incidents of differing severities",
+        "GET /api/status recomputes the banner on every request with no cached/stale value after a resolve"
+      ]
+    },
+    {
+      "name": "Active/Past Incident List Sync",
+      "tool": "Node.js query/filter functions",
+      "priority": "P0",
+      "skill_id": "SKILL_007",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "state": "open"
+              },
+              {
+                "id": 2,
+                "state": "resolved"
+              }
+            ]
+          ],
+          "name": "excludes resolved incidents from active list",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "state": "open"
+              }
+            ]
+          },
+          "export": "getActiveIncidents",
+          "module": "server/services/incidentQueries.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "state": "open"
+              },
+              {
+                "id": 2,
+                "state": "resolved"
+              }
+            ]
+          ],
+          "name": "includes only resolved incidents in past list",
+          "expect": {
+            "equals": [
+              {
+                "id": 2,
+                "state": "resolved"
+              }
+            ]
+          },
+          "export": "getPastIncidents",
+          "module": "server/services/incidentQueries.js"
+        }
+      ],
+      "capability": "Filters incidents into the public status page's active-incident view and past-incidents list purely by current state, so resolving an incident immediately moves it between the two with no separate sync step.",
+      "dependencies": [
+        "SKILL_004"
+      ],
+      "prompt_template": "You are implementing the query layer that drives the public status page's active-incident card and past-incidents list for Pulseboard. Write pure filter functions over the shared incident list: one returning only non-resolved incidents (active) and one returning only resolved incidents (past). Because both the dashboard and the public API read from the same underlying store through these filters, resolving an incident via the state-transition endpoint must cause it to disappear from the active filter and appear in the past filter on the very next read.",
+      "acceptance_criteria": [
+        "getActiveIncidents excludes any incident whose state is 'resolved'",
+        "getPastIncidents includes only incidents whose state is 'resolved'",
+        "GET /api/status reflects an incident's move from active to past within the same request cycle immediately after its PATCH resolve"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-31",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 7,
+    "p0_count": 7,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
