@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill",
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(pytest *)",
+      "Bash(gh *)",
+      "Bash(curl *)",
+      "Bash(cat *)",
+      "Bash(cd *)",
+      "Bash(ls *)",
+      "Bash(source *)",
+      "Bash(env *)",
+      "WebFetch(*)",
+      "Glob(*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)"
+    ]
+  },
+  "env": {
+    "SHELL": "/bin/sh"
+  }
+}
