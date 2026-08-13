@@ -1,0 +1,279 @@
+{
+  "skills": [
+    {
+      "name": "Timeline Severity/Date Filter Logic",
+      "tool": "Express REST API (Node.js)",
+      "priority": "P2",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "SEV1",
+                "createdAt": "2026-08-01"
+              },
+              {
+                "id": 2,
+                "severity": "SEV2",
+                "createdAt": "2026-08-02"
+              }
+            ],
+            {
+              "severity": [
+                "SEV1"
+              ]
+            }
+          ],
+          "name": "filters incidents by severity",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "severity": "SEV1",
+                "createdAt": "2026-08-01"
+              }
+            ]
+          },
+          "export": "filterIncidents",
+          "module": "server/utils/filterIncidents.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "SEV1",
+                "createdAt": "2026-08-01"
+              },
+              {
+                "id": 2,
+                "severity": "SEV2",
+                "createdAt": "2026-08-10"
+              }
+            ],
+            {
+              "endDate": "2026-08-15",
+              "startDate": "2026-08-05"
+            }
+          ],
+          "name": "filters incidents by date range",
+          "expect": {
+            "equals": [
+              {
+                "id": 2,
+                "severity": "SEV2",
+                "createdAt": "2026-08-10"
+              }
+            ]
+          },
+          "export": "filterIncidents",
+          "module": "server/utils/filterIncidents.js"
+        }
+      ],
+      "capability": "Implements a pure filtering function that narrows an array of incidents by severity level(s) and/or a date range, and wires it into the dashboard's incident-listing API endpoint via query parameters.",
+      "dependencies": [],
+      "prompt_template": "You are implementing incident timeline filtering for Pulseboard's internal dashboard API. Write a pure function filterIncidents(incidents, filters) that supports filtering by one or more severity values and/or a startDate/endDate range, and expose it through the existing GET /api/incidents endpoint via severity, startDate, and endDate query parameters. Do not mutate the input array, and treat omitted filters as no-ops so unfiltered requests behave exactly as before.",
+      "acceptance_criteria": [
+        "filterIncidents(incidents, {severity}) returns only incidents whose severity is in the requested set",
+        "filterIncidents(incidents, {startDate, endDate}) returns only incidents whose createdAt falls within the inclusive range",
+        "GET /api/incidents?severity=SEV1&startDate=...&endDate=... returns 200 with a JSON array containing only matching incidents"
+      ]
+    },
+    {
+      "name": "Dashboard Timeline Filter UI",
+      "tool": "React (internal dashboard client)",
+      "priority": "P2",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            {
+              "endDate": "2026-08-10",
+              "severity": [
+                "SEV1",
+                "SEV2"
+              ],
+              "startDate": "2026-08-01"
+            }
+          ],
+          "name": "builds query string from filter state",
+          "expect": {
+            "contains": "startDate=2026-08-01"
+          },
+          "export": "buildFilterQueryString",
+          "module": "client/src/utils/buildFilterQueryString.js"
+        }
+      ],
+      "capability": "Renders severity checkboxes/dropdown and a date-range picker on the internal dashboard timeline view, and translates the selected filter state into a query string for the filter API.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are building the filter controls for Pulseboard's internal dashboard timeline. Add severity multi-select and date-range picker UI above the incident timeline, and implement buildFilterQueryString(filters) that serializes the current filter state into a URL query string consumed by GET /api/incidents. Changing any control should refetch the timeline with the new filters applied, and clearing all filters should restore the unfiltered view.",
+      "acceptance_criteria": [
+        "buildFilterQueryString({severity, startDate, endDate}) returns a query string containing only the provided, non-empty filter values",
+        "Selecting a severity or date range re-renders the timeline showing only matching incidents",
+        "Clearing all filters restores the full unfiltered incident list"
+      ]
+    },
+    {
+      "name": "Component Category Grouping Model",
+      "tool": "SQLite / seed JSON store",
+      "priority": "P2",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "name": "Auth API",
+                "category": "API"
+              },
+              {
+                "id": 2,
+                "name": "Marketing Site",
+                "category": "Web"
+              },
+              {
+                "id": 3,
+                "name": "Payments API",
+                "category": "API"
+              }
+            ]
+          ],
+          "name": "groups components by category",
+          "expect": {
+            "equals": {
+              "API": [
+                {
+                  "id": 1,
+                  "name": "Auth API",
+                  "category": "API"
+                },
+                {
+                  "id": 3,
+                  "name": "Payments API",
+                  "category": "API"
+                }
+              ],
+              "Web": [
+                {
+                  "id": 2,
+                  "name": "Marketing Site",
+                  "category": "Web"
+                }
+              ]
+            }
+          },
+          "export": "groupComponentsByCategory",
+          "module": "server/utils/groupComponents.js"
+        }
+      ],
+      "capability": "Extends the component data model/seed data with a category field (e.g. API, Web, Infrastructure) and provides a function to group components by that category.",
+      "dependencies": [],
+      "prompt_template": "You are adding categorical grouping support to Pulseboard's component data. Add a category field to the component schema and seed data (values like API, Web, Infrastructure) and implement groupComponentsByCategory(components) which returns an object keyed by category, each holding the array of components in that category, preserving input order within each group.",
+      "acceptance_criteria": [
+        "groupComponentsByCategory(components) returns an object whose keys are the distinct category values present in the input",
+        "Each category's array contains exactly the components with that category, in original order",
+        "Seeded component data includes a non-empty category value for every component"
+      ]
+    },
+    {
+      "name": "Public Status Page Grouped Tiles UI",
+      "tool": "React (public status page client)",
+      "priority": "P2",
+      "skill_id": "SKILL_004",
+      "testcases": [],
+      "capability": "Renders public status page component health tiles grouped under category section headings instead of a single flat list.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are updating the Pulseboard public status page to organize component health tiles by category. Consume the grouped component data (from groupComponentsByCategory) and render each category as a labeled section containing its component tiles, preserving each tile's existing health-status styling. Categories with no components should not render an empty section.",
+      "acceptance_criteria": [
+        "Public status page renders one section heading per distinct component category present in the data",
+        "Each component tile appears exactly once, under its correct category section",
+        "A category with zero components does not render an empty section on the page"
+      ]
+    },
+    {
+      "name": "Incident History Export Logic & API",
+      "tool": "Express REST API (Node.js)",
+      "priority": "P2",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "title": "API Outage",
+                "status": "resolved",
+                "severity": "SEV1",
+                "createdAt": "2026-08-01"
+              }
+            ]
+          ],
+          "name": "serializes incident history to CSV",
+          "expect": {
+            "equals": "id,title,severity,status,createdAt\n1,API Outage,SEV1,resolved,2026-08-01"
+          },
+          "export": "toCSV",
+          "module": "server/utils/exportIncidents.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "title": "API Outage"
+              }
+            ]
+          ],
+          "name": "serializes incident history to JSON string",
+          "expect": {
+            "equals": "[{\"id\":1,\"title\":\"API Outage\"}]"
+          },
+          "export": "toJSON",
+          "module": "server/utils/exportIncidents.js"
+        }
+      ],
+      "capability": "Converts an array of incident history records into CSV and JSON text and exposes an export endpoint on the dashboard API that returns a downloadable file in the requested format.",
+      "dependencies": [],
+      "prompt_template": "You are implementing incident history export for Pulseboard's internal dashboard. Write toCSV(incidents) and toJSON(incidents) pure functions that serialize resolved incident history records, and add a GET /api/incidents/export?format=csv|json endpoint that streams the result with the appropriate Content-Type and Content-Disposition headers for a file download. Default to JSON when format is omitted or invalid.",
+      "acceptance_criteria": [
+        "toCSV(incidents) returns a header row plus one comma-separated row per incident with matching field order",
+        "toJSON(incidents) returns a valid JSON string that parses back into the original array",
+        "GET /api/incidents/export?format=csv returns 200 with Content-Type text/csv and a Content-Disposition attachment header"
+      ]
+    },
+    {
+      "name": "Dashboard Export Trigger UI",
+      "tool": "React (internal dashboard client)",
+      "priority": "P2",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Adds an export control to the internal dashboard's incident history view that lets the user choose CSV or JSON and downloads the file from the export API.",
+      "dependencies": [
+        "SKILL_005",
+        "SKILL_001"
+      ],
+      "prompt_template": "You are adding an export trigger to Pulseboard's internal dashboard incident history view. Add a control offering CSV and JSON options that, on click, requests GET /api/incidents/export with the chosen format and triggers a browser file download of the response. Respect any currently applied severity/date filters by including them in the export request.",
+      "acceptance_criteria": [
+        "Clicking the CSV export option downloads a file with a .csv extension containing the current history list",
+        "Clicking the JSON export option downloads a file with a .json extension containing the current history list",
+        "The export request includes any active severity/date-range filters so the downloaded file matches the visible timeline"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "PLB-7",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T08:08:07.940908Z",
+    "total": 6,
+    "p0_count": 0,
+    "p1_count": 0,
+    "p2_count": 6
+  }
+}
