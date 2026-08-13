@@ -1,0 +1,307 @@
+{
+  "skills": [
+    {
+      "name": "Component Category Grouping Utility",
+      "tool": "JavaScript utility module",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "name": "DB",
+                "category": "Infrastructure"
+              },
+              {
+                "id": 2,
+                "name": "API GW",
+                "category": "API"
+              }
+            ]
+          ],
+          "name": "groups components by their category field",
+          "expect": {
+            "equals": [
+              {
+                "category": "Infrastructure",
+                "components": [
+                  {
+                    "id": 1,
+                    "name": "DB",
+                    "category": "Infrastructure"
+                  }
+                ]
+              },
+              {
+                "category": "API",
+                "components": [
+                  {
+                    "id": 2,
+                    "name": "API GW",
+                    "category": "API"
+                  }
+                ]
+              }
+            ]
+          },
+          "export": "groupComponentsByCategory",
+          "module": "src/utils/groupComponentsByCategory.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "name": "Legacy Service"
+              }
+            ]
+          ],
+          "name": "components missing a category fall into 'Other'",
+          "expect": {
+            "equals": [
+              {
+                "category": "Other",
+                "components": [
+                  {
+                    "id": 1,
+                    "name": "Legacy Service"
+                  }
+                ]
+              }
+            ]
+          },
+          "export": "groupComponentsByCategory",
+          "module": "src/utils/groupComponentsByCategory.js"
+        },
+        {
+          "args": [
+            []
+          ],
+          "name": "empty component list returns empty group array",
+          "expect": {
+            "equals": []
+          },
+          "export": "groupComponentsByCategory",
+          "module": "src/utils/groupComponentsByCategory.js"
+        }
+      ],
+      "capability": "Write a pure function that takes the flat array of status-page components and groups them into category buckets, placing components without a category into an 'Other' bucket.",
+      "dependencies": [],
+      "prompt_template": "You are implementing a pure data-transformation utility for the public status page. Given an array of component objects (each with at least a name and optional category field), return an array of {category, components} groups. Components missing a category must be placed into a group named 'Other'. Do not mutate the input array or component objects.",
+      "acceptance_criteria": [
+        "groupComponentsByCategory(components) returns an array of {category, components} objects, one per distinct category present in the input",
+        "Components with no category field (or an empty string) are collected into a single group named 'Other'",
+        "Calling the function with an empty array returns an empty array",
+        "The function does not mutate the input array or its component objects"
+      ]
+    },
+    {
+      "name": "Canonical Category Sort Order",
+      "tool": "JavaScript utility module",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "category": "Infrastructure",
+                "components": []
+              },
+              {
+                "category": "API",
+                "components": []
+              },
+              {
+                "category": "Web",
+                "components": []
+              }
+            ]
+          ],
+          "name": "sorts canonical categories per CATEGORY_ORDER",
+          "expect": {
+            "equals": [
+              {
+                "category": "API",
+                "components": []
+              },
+              {
+                "category": "Web",
+                "components": []
+              },
+              {
+                "category": "Infrastructure",
+                "components": []
+              }
+            ]
+          },
+          "export": "sortCategoryGroups",
+          "module": "src/utils/categoryOrder.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "category": "Security",
+                "components": []
+              },
+              {
+                "category": "Other",
+                "components": []
+              },
+              {
+                "category": "API",
+                "components": []
+              }
+            ]
+          ],
+          "name": "unknown categories sorted alphabetically before 'Other'",
+          "expect": {
+            "equals": [
+              {
+                "category": "API",
+                "components": []
+              },
+              {
+                "category": "Security",
+                "components": []
+              },
+              {
+                "category": "Other",
+                "components": []
+              }
+            ]
+          },
+          "export": "sortCategoryGroups",
+          "module": "src/utils/categoryOrder.js"
+        }
+      ],
+      "capability": "Write a function that sorts category groups into a deterministic, human-meaningful order (canonical categories first, unknown categories alphabetically, 'Other' always last).",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are implementing deterministic ordering for grouped status-page categories so the public page renders the same category order on every load. Accept the array of {category, components} groups produced by the grouping utility and a canonical order list (e.g. API, Web, Infrastructure), returning groups sorted by that canonical order, with any unrecognized categories sorted alphabetically after the canonical ones, and 'Other' always last regardless of alphabetical position.",
+      "acceptance_criteria": [
+        "sortCategoryGroups(groups) places categories found in the CATEGORY_ORDER list first, in that list's order",
+        "Categories not present in CATEGORY_ORDER are sorted alphabetically and placed after the canonical categories",
+        "A group named 'Other' is always sorted last, even if it would otherwise sort earlier",
+        "Sorting is stable and deterministic across repeated calls with the same input"
+      ]
+    },
+    {
+      "name": "Category Label Formatting Helper",
+      "tool": "JavaScript utility module",
+      "priority": "P1",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            ""
+          ],
+          "name": "empty string defaults to Other",
+          "expect": {
+            "equals": "Other"
+          },
+          "export": "formatCategoryLabel",
+          "module": "src/utils/formatCategoryLabel.js"
+        },
+        {
+          "args": [
+            null
+          ],
+          "name": "undefined defaults to Other",
+          "expect": {
+            "equals": "Other"
+          },
+          "export": "formatCategoryLabel",
+          "module": "src/utils/formatCategoryLabel.js"
+        },
+        {
+          "args": [
+            "API"
+          ],
+          "name": "valid category passes through unchanged",
+          "expect": {
+            "equals": "API"
+          },
+          "export": "formatCategoryLabel",
+          "module": "src/utils/formatCategoryLabel.js"
+        }
+      ],
+      "capability": "Write a small formatting helper that normalizes a category name for display, defaulting blank/missing values to 'Other'.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are implementing a display-label helper used by the category section headers on the public status page. Given a raw category string (which may be undefined, null, or empty), return a clean display label, defaulting to 'Other' when no usable category is present. Do not alter already-valid category strings.",
+      "acceptance_criteria": [
+        "formatCategoryLabel('') returns 'Other'",
+        "formatCategoryLabel(undefined) returns 'Other'",
+        "formatCategoryLabel('API') returns 'API' unchanged"
+      ]
+    },
+    {
+      "name": "Category Section UI Component",
+      "tool": "React",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [],
+      "capability": "Build a React CategorySection component that renders a category heading followed by the grid of ComponentTile elements belonging to that category, matching the Figma spec's light-theme public page design tokens.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are building the CategorySection presentational component for the public status page, which replaces the previous flat component grid. Render a category heading (using the label formatter) followed by a grid/list of existing ComponentTile components for that category. Reuse the existing ComponentTile component and light-theme design tokens; do not introduce severity colors on category headings per the design fidelity requirement.",
+      "acceptance_criteria": [
+        "CategorySection renders one heading element containing the category's display label",
+        "CategorySection renders one ComponentTile per component passed in that category's group",
+        "CategorySection applies no severity-color styling (SEV1/2/3 tokens) to its heading or container"
+      ]
+    },
+    {
+      "name": "Public Page Grouped Layout Integration",
+      "tool": "React",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [],
+      "capability": "Integrate the grouped-and-sorted category sections into the public status page layout, replacing the flat tile grid while preserving the banner, active incident, and past incidents sections' existing positions.",
+      "dependencies": [
+        "SKILL_004"
+      ],
+      "prompt_template": "You are wiring the new category grouping into the public status page. Fetch/consume the existing components data, pass it through the grouping and sorting utilities, and render a CategorySection per group in place of the current flat grid, positioned between the status banner and the active incident section. Ensure page behavior and other sections (banner, active incident, past incidents) are unaffected.",
+      "acceptance_criteria": [
+        "Public status page renders one CategorySection per distinct component category returned by the API, in canonical sort order",
+        "The flat, ungrouped component grid is no longer rendered",
+        "Banner, active incident, and past incidents sections remain in their existing positions and are unaffected by the layout change"
+      ]
+    },
+    {
+      "name": "Empty and Single-Category Graceful Rendering",
+      "tool": "React",
+      "priority": "P2",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Handle edge cases in the grouped layout: zero components, or all components sharing a single category, without rendering broken or redundant UI.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_004"
+      ],
+      "prompt_template": "You are handling edge cases for the grouped public status page layout. When there are zero components, the category section area should render nothing (no empty headings). When every component shares a single category, the page should still render that one CategorySection normally rather than special-casing it away. Keep this logic isolated so it doesn't affect the multi-category rendering path.",
+      "acceptance_criteria": [
+        "When the component list is empty, no CategorySection headings are rendered",
+        "When all components share one category, exactly one CategorySection is rendered containing all components"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-35",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 6,
+    "p0_count": 4,
+    "p1_count": 1,
+    "p2_count": 1
+  }
+}
