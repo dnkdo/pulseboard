@@ -1,0 +1,220 @@
+{
+  "skills": [
+    {
+      "name": "Incident Detail Data Fetching",
+      "tool": "GET /api/incidents/:id REST endpoint",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "status": "identified",
+                "timestamp": "2026-08-13T09:00:00.000Z"
+              },
+              {
+                "status": "open",
+                "timestamp": "2026-08-13T08:00:00.000Z"
+              },
+              {
+                "status": "resolved",
+                "timestamp": "2026-08-13T10:00:00.000Z"
+              }
+            ]
+          ],
+          "name": "sorts transitions chronologically ascending",
+          "expect": {
+            "equals": [
+              {
+                "status": "open",
+                "timestamp": "2026-08-13T08:00:00.000Z"
+              },
+              {
+                "status": "identified",
+                "timestamp": "2026-08-13T09:00:00.000Z"
+              },
+              {
+                "status": "resolved",
+                "timestamp": "2026-08-13T10:00:00.000Z"
+              }
+            ]
+          },
+          "export": "sortTransitionsByTimestamp",
+          "module": "src/utils/transitions.js"
+        }
+      ],
+      "capability": "Fetch a single incident record together with its complete, chronologically-ordered state transition history from the backend API by incident ID.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the data-fetching layer for the incident detail view. Write a client function that calls GET /api/incidents/:id, returns the incident along with its transitions array, and a pure helper that sorts transitions chronologically (oldest first) for stable rendering. Handle the not-found case by surfacing a clear error/null result rather than throwing an unhandled exception.",
+      "acceptance_criteria": [
+        "GET /api/incidents/:id returns the incident object including a transitions array with timestamps",
+        "sortTransitionsByTimestamp(transitions) returns transitions ordered from oldest to newest"
+      ]
+    },
+    {
+      "name": "Transition History Timeline Component",
+      "tool": "React component",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            "2026-08-13T08:00:00.000Z"
+          ],
+          "name": "formats ISO timestamp into a readable label",
+          "expect": {
+            "contains": "2026"
+          },
+          "export": "formatTransitionTimestamp",
+          "module": "src/utils/formatters.js"
+        }
+      ],
+      "capability": "Render an incident's full list of state transitions as a chronological timeline showing from/to state and a human-readable timestamp for each entry.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are building the TransitionTimeline React component for the incident detail view. It receives a sorted transitions array as a prop and renders one row per transition showing the state change and a formatted timestamp. Write a pure formatting helper for timestamps so it can be unit tested independent of rendering, and ensure the component handles an empty transitions array gracefully.",
+      "acceptance_criteria": [
+        "formatTransitionTimestamp(isoString) returns a human-readable date/time label",
+        "TransitionTimeline component renders one row per transition in chronological order"
+      ]
+    },
+    {
+      "name": "Internal Incident Detail Page",
+      "tool": "React Router",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [],
+      "capability": "Build the dashboard-side incident detail page/route that shows incident metadata, current state, and the full transition timeline.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002"
+      ],
+      "prompt_template": "You are implementing the internal IncidentDetailPage at route /incidents/:id in the dark-themed dashboard. It should fetch the incident via the SKILL_001 client, show a loading state while fetching, render incident metadata plus the TransitionTimeline component, and show a not-found state for invalid IDs. Follow the existing dashboard's dark theme and severity color tokens.",
+      "acceptance_criteria": [
+        "Route /incidents/:id renders the IncidentDetailPage component with the fetched incident's data",
+        "Page displays a loading state while incident data is being fetched and a not-found state for invalid IDs"
+      ]
+    },
+    {
+      "name": "Dashboard Timeline Navigation Link",
+      "tool": "React Router Link",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            "inc_123"
+          ],
+          "name": "builds internal incident detail path from an id",
+          "expect": {
+            "equals": "/incidents/inc_123"
+          },
+          "export": "buildIncidentDetailPath",
+          "module": "src/utils/routes.js"
+        }
+      ],
+      "capability": "Make each incident entry on the dashboard timeline clickable, linking through to that incident's detail page.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are wiring navigation from the dashboard incident timeline into the new incident detail page. Add a pure path-builder helper used by the timeline's Link/onClick handler, and ensure clicking any incident entry navigates to /incidents/:id for that incident's ID.",
+      "acceptance_criteria": [
+        "buildIncidentDetailPath(incidentId) returns the correct internal route path string",
+        "Clicking a timeline incident entry navigates to /incidents/:id"
+      ]
+    },
+    {
+      "name": "Public-Visible Field Filter",
+      "tool": "pure utility function",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            {
+              "id": "inc_1",
+              "title": "API Latency",
+              "status": "investigating",
+              "assignee": "dana",
+              "severity": "sev2",
+              "internalNotes": "root cause tbd"
+            }
+          ],
+          "name": "strips internal-only fields from incident before public render",
+          "expect": {
+            "equals": {
+              "id": "inc_1",
+              "title": "API Latency",
+              "status": "investigating",
+              "severity": "sev2"
+            }
+          },
+          "export": "toPublicIncidentView",
+          "module": "src/utils/publicView.js"
+        }
+      ],
+      "capability": "Strip internal-only fields from an incident and its transitions before they are rendered on any public-facing surface.",
+      "dependencies": [],
+      "prompt_template": "You are writing a pure utility, toPublicIncidentView, that takes an internal incident object (which may include fields like assignee or internalNotes) and returns only the fields approved for public display (id, title, status, severity, timestamps). This function is the single gate that public components must pass incident data through, so it must exclude any field not explicitly whitelisted.",
+      "acceptance_criteria": [
+        "toPublicIncidentView(incident) returns an object containing only the whitelisted public fields and excludes internal-only fields such as assignee or internalNotes"
+      ]
+    },
+    {
+      "name": "Public Incident Detail View",
+      "tool": "React Router (public status page)",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Build the public-facing incident detail page that shows only public-visible transition history, reachable from the public incident card.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_005"
+      ],
+      "prompt_template": "You are implementing the public PublicIncidentDetailPage at route /status/incidents/:id in the light-themed public status page. It must fetch the incident, pass it through toPublicIncidentView (SKILL_005) before rendering, and reuse a public variant of the transition timeline showing only public-visible transitions and fields. Never render internal-only data on this page.",
+      "acceptance_criteria": [
+        "Route /status/incidents/:id renders the PublicIncidentDetailPage with public-filtered incident data",
+        "Public detail page does not render internal-only fields such as assignee or internal notes"
+      ]
+    },
+    {
+      "name": "Public Card Navigation Link",
+      "tool": "React Router Link",
+      "priority": "P0",
+      "skill_id": "SKILL_007",
+      "testcases": [
+        {
+          "args": [
+            "inc_123"
+          ],
+          "name": "builds public incident detail path from an id",
+          "expect": {
+            "equals": "/status/incidents/inc_123"
+          },
+          "export": "buildPublicIncidentPath",
+          "module": "src/utils/routes.js"
+        }
+      ],
+      "capability": "Add a click-through link from the public incident card component to that incident's public detail view.",
+      "dependencies": [
+        "SKILL_006"
+      ],
+      "prompt_template": "You are wiring navigation from the public status page's active/past incident card into the new public incident detail page. Add a pure path-builder helper used by the card's Link/onClick handler so clicking a public incident card navigates to /status/incidents/:id for that incident.",
+      "acceptance_criteria": [
+        "buildPublicIncidentPath(incidentId) returns the correct public route path string",
+        "Clicking the public incident card navigates to the public incident detail route"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-32",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 7,
+    "p0_count": 7,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
