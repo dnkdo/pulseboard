@@ -1,0 +1,255 @@
+{
+  "skills": [
+    {
+      "name": "Initialize Monorepo Structure",
+      "tool": "npm / filesystem",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [],
+          "name": "root package.json declares frontend and backend workspaces",
+          "expect": {
+            "contains": [
+              "frontend",
+              "backend"
+            ]
+          },
+          "export": "workspaces",
+          "module": "package.json"
+        }
+      ],
+      "capability": "Create the root repository scaffold with frontend/ and backend/ workspace directories, a root package.json wiring npm workspaces, .gitignore, and a base README.",
+      "dependencies": [],
+      "prompt_template": "You are setting up the root of a monorepo containing a React+Vite frontend and a Node/Express backend as npm workspaces. Create frontend/ and backend/ directories, a root package.json with a workspaces array listing both, and a .gitignore covering node_modules, dist, build, and .env. Do not add any domain/business logic — this is scaffolding only.",
+      "acceptance_criteria": [
+        "Root package.json declares an npm workspaces array including 'frontend' and 'backend'",
+        "Running npm install from the repo root succeeds and installs dependencies for both workspaces without error"
+      ]
+    },
+    {
+      "name": "Scaffold Vite React Frontend",
+      "tool": "Vite / npm",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [],
+          "name": "frontend package.json declares react and vite dependencies",
+          "expect": {
+            "contains": {
+              "vite": "string",
+              "react": "string"
+            }
+          },
+          "export": "dependencies",
+          "module": "frontend/package.json"
+        },
+        {
+          "args": [],
+          "name": "frontend package.json declares tailwind devDependency",
+          "expect": {
+            "contains": {
+              "tailwindcss": "string"
+            }
+          },
+          "export": "devDependencies",
+          "module": "frontend/package.json"
+        }
+      ],
+      "capability": "Generate the frontend/ workspace as a Vite + React 18 app with Tailwind CSS configured and building successfully.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are scaffolding the frontend/ workspace using Vite with the React 18 template, then adding and configuring Tailwind CSS (tailwind.config.js, postcss.config.js, base directives in the main CSS file). Keep the generated App component minimal — no domain UI, just a placeholder confirming the build pipeline works.",
+      "acceptance_criteria": [
+        "frontend/package.json lists react and react-dom at ^18 and vite as dependencies",
+        "frontend/package.json lists tailwindcss, postcss, and autoprefixer as devDependencies",
+        "Running npm run dev in frontend/ starts the Vite dev server without error"
+      ]
+    },
+    {
+      "name": "Scaffold Express Backend",
+      "tool": "Express / npm",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [],
+          "name": "backend package.json declares express dependency",
+          "expect": {
+            "contains": {
+              "express": "string"
+            }
+          },
+          "export": "dependencies",
+          "module": "backend/package.json"
+        }
+      ],
+      "capability": "Generate the backend/ workspace as a minimal Node.js + Express application with an entrypoint server file and a placeholder health route.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are scaffolding the backend/ workspace as a Node.js Express server. Create a package.json with express as a dependency, an entrypoint (e.g. src/index.js) that starts the server on a configurable port, and a GET /api/health route returning a 200 JSON status payload. No domain routes or data models — scaffolding only.",
+      "acceptance_criteria": [
+        "backend/package.json lists express as a dependency",
+        "Starting the backend server (e.g. npm start or node src/index.js) listens on the configured port without throwing"
+      ]
+    },
+    {
+      "name": "Configure Vitest Test Framework",
+      "tool": "Vitest",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [],
+          "name": "frontend package.json declares a test script",
+          "expect": {
+            "contains": {
+              "test": "string"
+            }
+          },
+          "export": "scripts",
+          "module": "frontend/package.json"
+        },
+        {
+          "args": [],
+          "name": "backend package.json declares a test script",
+          "expect": {
+            "contains": {
+              "test": "string"
+            }
+          },
+          "export": "scripts",
+          "module": "backend/package.json"
+        }
+      ],
+      "capability": "Wire up Vitest as the shared test runner across both frontend (jsdom + React Testing Library) and backend (node environment) workspaces with a working npm test script.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are configuring Vitest as the test framework for both workspaces. Add vitest as a devDependency to frontend/ and backend/, add a 'test' npm script to each package.json that runs vitest, and add a vitest.config.js in frontend/ that sets test.environment to 'jsdom' and wires @testing-library/react. Do not write feature tests here, only the framework configuration.",
+      "acceptance_criteria": [
+        "frontend/package.json and backend/package.json each declare a 'test' script invoking vitest",
+        "frontend/vitest.config.js sets test.environment to 'jsdom'",
+        "Running npm test from the repo root executes both workspaces' suites and exits 0 on a fresh checkout"
+      ]
+    },
+    {
+      "name": "Create .adlc.json Config",
+      "tool": "filesystem / JSON",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [],
+          "name": ".adlc.json test_command references the test runner",
+          "expect": {
+            "contains": "test"
+          },
+          "export": "test_command",
+          "module": ".adlc.json"
+        },
+        {
+          "args": [],
+          "name": ".adlc.json tech_stack lists react and express",
+          "expect": {
+            "contains": [
+              "react",
+              "express"
+            ]
+          },
+          "export": "tech_stack",
+          "module": ".adlc.json"
+        },
+        {
+          "args": [],
+          "name": ".adlc.json required_services is empty",
+          "expect": {
+            "equals": []
+          },
+          "export": "required_services",
+          "module": ".adlc.json"
+        }
+      ],
+      "capability": "Generate a root .adlc.json declaring the test command, tech stack, and required services (none beyond local SQLite/JSON file store) for downstream agent tooling.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are authoring the root .adlc.json file consumed by the agent pipeline. Populate test_command with the exact command that runs the full test suite (e.g. 'npm test'), tech_stack with an array naming the key technologies (react, vite, tailwindcss, express, vitest), and required_services as an empty array since the app only needs a local SQLite or JSON file store with no external services.",
+      "acceptance_criteria": [
+        ".adlc.json contains a non-empty test_command string that runs the test suite",
+        ".adlc.json tech_stack array includes react, express, and vitest",
+        ".adlc.json required_services is an empty array (no external services required)"
+      ]
+    },
+    {
+      "name": "Configure ESLint and Prettier Baseline",
+      "tool": "ESLint / Prettier",
+      "priority": "P1",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [],
+          "name": "frontend package.json declares a lint script",
+          "expect": {
+            "contains": {
+              "lint": "string"
+            }
+          },
+          "export": "scripts",
+          "module": "frontend/package.json"
+        },
+        {
+          "args": [],
+          "name": "backend package.json declares a lint script",
+          "expect": {
+            "contains": {
+              "lint": "string"
+            }
+          },
+          "export": "scripts",
+          "module": "backend/package.json"
+        }
+      ],
+      "capability": "Set up a shared ESLint + Prettier baseline covering both the React frontend and Node backend, with lint/format npm scripts wired in each workspace.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are configuring linting and formatting baselines for both workspaces. Add eslint and prettier as devDependencies, create an ESLint config appropriate to each workspace (React/JSX rules for frontend, Node rules for backend), a shared .prettierrc, and 'lint' and 'format' npm scripts in each package.json. Keep rule sets minimal defaults — no custom domain rules.",
+      "acceptance_criteria": [
+        "frontend/package.json and backend/package.json each declare a 'lint' script invoking eslint",
+        "An ESLint config file exists for each workspace defining rules appropriate to its environment (React for frontend, Node for backend)",
+        "Running npm run lint in each workspace completes with zero errors against the scaffolded baseline code"
+      ]
+    },
+    {
+      "name": "Add CI Smoke Test Suite",
+      "tool": "Vitest / Supertest / React Testing Library",
+      "priority": "P0",
+      "skill_id": "SKILL_007",
+      "testcases": [],
+      "capability": "Write a minimal end-to-end smoke test pair — a backend API health-check test and a frontend basic component render test — proving the scaffolded environment builds and tests execute successfully.",
+      "dependencies": [
+        "SKILL_004"
+      ],
+      "prompt_template": "You are adding the minimal smoke tests that prove the newly scaffolded environment works end-to-end. In backend/, write a test that hits GET /api/health and asserts a 200 response with a status field. In frontend/, write a test that renders the placeholder App component and asserts it mounts without throwing. These are the only tests to add — no domain feature coverage.",
+      "acceptance_criteria": [
+        "A backend test asserts GET /api/health responds 200 with a JSON status field",
+        "A frontend test renders the base App component without throwing",
+        "Running npm test from the repo root executes both smoke tests and the overall command exits 0"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-27",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 7,
+    "p0_count": 6,
+    "p1_count": 1,
+    "p2_count": 0
+  }
+}
