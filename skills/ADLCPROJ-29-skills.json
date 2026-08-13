@@ -1,0 +1,295 @@
+{
+  "skills": [
+    {
+      "name": "Overall Status Banner Logic",
+      "tool": "GET /api/incidents (shared REST API)",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            []
+          ],
+          "name": "no active incidents returns operational",
+          "expect": {
+            "equals": "operational"
+          },
+          "export": "getOverallStatus",
+          "module": "src/lib/status.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "status": "open",
+                "severity": "sev3"
+              },
+              {
+                "status": "investigating",
+                "severity": "sev1"
+              }
+            ]
+          ],
+          "name": "highest severity among active incidents wins",
+          "expect": {
+            "equals": "sev1"
+          },
+          "export": "getOverallStatus",
+          "module": "src/lib/status.js"
+        }
+      ],
+      "capability": "Computes and renders the public status page's top banner as either 'All Systems Operational' or the label/color of the highest-severity active incident, sourced purely from the shared incidents API.",
+      "dependencies": [
+        "SKILL_006"
+      ],
+      "prompt_template": "You are a frontend engineer building the public status page's overall status banner for Pulseboard. Given the current list of incidents from the shared REST API, derive the aggregate status: operational when no incident is active, or the highest-severity active incident's state when one or more exist. Render the banner using only the light-theme tokens from Figma file 40C0dQPIXhkZA9eMMaT18J, with zero manual publish step and zero hardcoded incident data.",
+      "acceptance_criteria": [
+        "getOverallStatus returns 'operational' when the incident list contains no active incidents",
+        "getOverallStatus returns the highest-severity level among currently active incidents when multiple are active",
+        "Banner visually matches the Figma light-theme spec, using severity color only when an incident is active"
+      ]
+    },
+    {
+      "name": "Component Health Tiles",
+      "tool": "GET /api/components (shared REST API)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            0.9995
+          ],
+          "name": "formats uptime ratio to percentage string",
+          "expect": {
+            "equals": "99.95%"
+          },
+          "export": "formatUptime",
+          "module": "src/lib/components.js"
+        }
+      ],
+      "capability": "Fetches components from the shared API and renders per-component health tiles showing name, current status, and a formatted uptime percentage.",
+      "dependencies": [
+        "SKILL_006"
+      ],
+      "prompt_template": "You are a frontend engineer building the per-component health tiles for the public status page. Fetch the component list from the shared REST API and render one tile per component showing its name, current health status, and uptime percentage formatted to two decimal places. Use only light-theme, non-severity status colors for tile state so severity colors remain exclusive to incidents.",
+      "acceptance_criteria": [
+        "formatUptime converts a 0-1 uptime ratio into a percentage string with exactly two decimal places",
+        "Tiles fetch the component list from GET /api/components and render one tile per returned component",
+        "Each tile's status color is drawn from the shared component-status token mapping, distinct from severity colors"
+      ]
+    },
+    {
+      "name": "Active Incident Card",
+      "tool": "GET /api/incidents (shared REST API)",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "status": "resolved"
+              },
+              {
+                "id": 2,
+                "status": "investigating"
+              }
+            ]
+          ],
+          "name": "filters out resolved incidents",
+          "expect": {
+            "equals": [
+              {
+                "id": 2,
+                "status": "investigating"
+              }
+            ]
+          },
+          "export": "getActiveIncidents",
+          "module": "src/lib/incidents.js"
+        }
+      ],
+      "capability": "Filters incidents to those currently unresolved and renders an active incident card for each, disappearing entirely once resolved.",
+      "dependencies": [
+        "SKILL_006"
+      ],
+      "prompt_template": "You are a frontend engineer building the active incident card section of the public status page. Filter the incidents returned by the shared REST API down to those whose status is not resolved, and render one card per active incident with its severity, title, and latest update. The section must render nothing at all when there are no active incidents, with no manual toggle or publish step involved.",
+      "acceptance_criteria": [
+        "getActiveIncidents returns only incidents whose status is not 'resolved'",
+        "The active incident section renders no DOM output when getActiveIncidents returns an empty array",
+        "Each active incident renders as its own card when multiple incidents are simultaneously active"
+      ]
+    },
+    {
+      "name": "Past Incidents List",
+      "tool": "GET /api/incidents (shared REST API)",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "status": "resolved",
+                "resolvedAt": "2026-01-01"
+              },
+              {
+                "id": 2,
+                "status": "resolved",
+                "resolvedAt": "2026-03-01"
+              },
+              {
+                "id": 3,
+                "status": "investigating",
+                "resolvedAt": null
+              }
+            ]
+          ],
+          "name": "returns resolved incidents sorted most-recent-first",
+          "expect": {
+            "equals": [
+              {
+                "id": 2,
+                "status": "resolved",
+                "resolvedAt": "2026-03-01"
+              },
+              {
+                "id": 1,
+                "status": "resolved",
+                "resolvedAt": "2026-01-01"
+              }
+            ]
+          },
+          "export": "getPastIncidents",
+          "module": "src/lib/incidents.js"
+        }
+      ],
+      "capability": "Filters incidents to resolved ones and sorts them reverse-chronologically for the public status page's incident history section.",
+      "dependencies": [],
+      "prompt_template": "You are a frontend engineer building the past incidents list on the public status page. From the incidents returned by the shared REST API, select only resolved incidents and order them by resolution date descending so the most recent incident appears first. The list must update automatically as incidents are resolved via the internal dashboard, with no manual re-publish step.",
+      "acceptance_criteria": [
+        "getPastIncidents returns only incidents with status 'resolved'",
+        "getPastIncidents orders the returned incidents by resolvedAt in descending (most recent first) order"
+      ]
+    },
+    {
+      "name": "Status Page Data Integration Layer",
+      "tool": "GET /api/components, GET /api/incidents (shared REST API)",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": "c1",
+                "name": "API",
+                "status": "operational",
+                "uptime": 0.999
+              }
+            ],
+            [
+              {
+                "id": 2,
+                "status": "investigating",
+                "severity": "sev2",
+                "resolvedAt": null
+              }
+            ]
+          ],
+          "name": "assembles combined status page data model",
+          "expect": {
+            "contains": {
+              "overallStatus": "string"
+            }
+          },
+          "export": "assembleStatusPageData",
+          "module": "src/lib/statusPageData.js"
+        }
+      ],
+      "capability": "Fetches components and incidents from the shared REST API and assembles them into a single status-page data model (overall status, components, active incidents, past incidents) with no manual publish step.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003",
+        "SKILL_004"
+      ],
+      "prompt_template": "You are a frontend engineer wiring the public status page to Pulseboard's shared REST API. Fetch component and incident data on page load, and compose it into a single data model containing overall status, the component list, active incidents, and past incidents, reusing the existing status/incident helper functions. There must be zero manual publish or rebuild step — the page always reflects the live backend state.",
+      "acceptance_criteria": [
+        "assembleStatusPageData composes overallStatus, components, activeIncidents, and pastIncidents from raw API responses into one object",
+        "The status page fetches fresh data from GET /api/components and GET /api/incidents on every page load with no manual publish or rebuild step",
+        "A state change made via the internal dashboard (e.g. resolving an incident) is reflected on the public page without redeploying the frontend"
+      ]
+    },
+    {
+      "name": "Severity & Status Color Tokens",
+      "tool": "Figma design tokens (file 40C0dQPIXhkZA9eMMaT18J)",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [
+            "sev1"
+          ],
+          "name": "severity color is a valid hex string",
+          "expect": {
+            "matches": "^#[0-9A-Fa-f]{6}$"
+          },
+          "export": "getSeverityColor",
+          "module": "src/lib/colors.js"
+        },
+        {
+          "args": [
+            "degraded"
+          ],
+          "name": "component status color is a valid hex string",
+          "expect": {
+            "matches": "^#[0-9A-Fa-f]{6}$"
+          },
+          "export": "getComponentStatusColor",
+          "module": "src/lib/colors.js"
+        }
+      ],
+      "capability": "Maps incident severity levels and component health states to the light-theme design tokens from Figma, keeping severity colors exclusive to severity contexts.",
+      "dependencies": [],
+      "prompt_template": "You are a frontend engineer implementing the shared color token mapping for Pulseboard's public status page. Provide functions that map incident severities (sev1/sev2/sev3) and component health states to the exact light-theme hex colors defined in Figma file 40C0dQPIXhkZA9eMMaT18J, keeping the two palettes distinct so severity colors never leak into non-incident UI. Every consumer (banner, tiles, incident cards) must use these functions rather than hardcoding colors.",
+      "acceptance_criteria": [
+        "getSeverityColor returns a valid hex color string for each of sev1, sev2, and sev3",
+        "getComponentStatusColor returns a valid hex color string for each component health state, distinct from the severity palette",
+        "SEV1/2/3 colors are used only in severity contexts and nowhere else across the status page (0 violations)"
+      ]
+    },
+    {
+      "name": "Public Status Page Layout",
+      "tool": "Figma design spec (file 40C0dQPIXhkZA9eMMaT18J)",
+      "priority": "P1",
+      "skill_id": "SKILL_007",
+      "testcases": [],
+      "capability": "Composes the banner, component tiles, active incident card(s), and past incidents list into the full public status page layout matching the Figma spec.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003",
+        "SKILL_004",
+        "SKILL_005"
+      ],
+      "prompt_template": "You are a frontend engineer assembling the complete public status page for Pulseboard. Compose the overall status banner, component health tiles, active incident section, and past incidents list into a single light-themed page matching the layout, spacing, and responsiveness defined in Figma file 40C0dQPIXhkZA9eMMaT18J. Ensure the active incident section is fully omitted from the page when there is nothing active, and that no dark-theme styling from the internal dashboard leaks in.",
+      "acceptance_criteria": [
+        "The public status page renders banner, tiles, active incident section, and past incidents list in the order and spacing specified by the Figma file",
+        "The active incident section is completely absent from the rendered page when there are no active incidents",
+        "The page uses only light-theme design tokens and is responsive across common viewport widths"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-29",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 7,
+    "p0_count": 6,
+    "p1_count": 1,
+    "p2_count": 0
+  }
+}
