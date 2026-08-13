@@ -1,0 +1,299 @@
+{
+  "skills": [
+    {
+      "name": "Dashboard Metrics Computation",
+      "tool": "Internal REST API (GET /api/incidents, GET /api/components)",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "state": "open"
+              },
+              {
+                "id": 2,
+                "state": "investigating"
+              },
+              {
+                "id": 3,
+                "state": "resolved"
+              }
+            ]
+          ],
+          "name": "counts non-resolved incidents as open",
+          "expect": {
+            "equals": 2
+          },
+          "export": "computeOpenIncidentsCount",
+          "module": "src/lib/metrics.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "state": "resolved",
+                "created_at": "2026-08-10T00:00:00Z",
+                "resolved_at": "2026-08-10T01:00:00Z"
+              },
+              {
+                "id": 2,
+                "state": "resolved",
+                "created_at": "2026-08-11T00:00:00Z",
+                "resolved_at": "2026-08-11T02:00:00Z"
+              }
+            ],
+            "2026-08-13T00:00:00Z"
+          ],
+          "name": "computes average MTTR in minutes for incidents resolved within 7 days",
+          "expect": {
+            "equals": 90
+          },
+          "export": "compute7DayMTTR",
+          "module": "src/lib/metrics.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "created_at": "2026-08-01T00:00:00Z"
+              },
+              {
+                "id": 2,
+                "created_at": "2026-07-31T00:00:00Z"
+              }
+            ],
+            "2026-08-13T00:00:00Z"
+          ],
+          "name": "counts incidents created in current calendar month",
+          "expect": {
+            "equals": 1
+          },
+          "export": "computeIncidentsThisMonth",
+          "module": "src/lib/metrics.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "component_id": 1,
+                "total_minutes": 43200,
+                "uptime_minutes": 43000
+              }
+            ]
+          ],
+          "name": "uptime percent is within 0-100 bounds",
+          "expect": {
+            "gte": 0
+          },
+          "export": "computeUptimePercent",
+          "module": "src/lib/metrics.js"
+        }
+      ],
+      "capability": "Implement pure functions that compute the four stat-card metrics (open incident count, 7-day MTTR, incidents this month, uptime %) from raw incident/component data.",
+      "dependencies": [],
+      "prompt_template": "You are implementing metric-computation utilities for an incident dashboard. Given arrays of incident objects (each with id, severity, state, created_at, resolved_at) and component uptime data, write pure, deterministic functions to compute open incident count, 7-day mean-time-to-resolve, incidents created in the current calendar month, and overall uptime percentage. Accept an explicit reference date parameter so results are testable without relying on the system clock.",
+      "acceptance_criteria": [
+        "computeOpenIncidentsCount returns the count of incidents whose state is not 'resolved'",
+        "compute7DayMTTR returns the average resolution time in minutes for incidents resolved within 7 days of the reference date",
+        "computeIncidentsThisMonth returns the count of incidents created in the same calendar month/year as the reference date",
+        "computeUptimePercent returns a percentage between 0 and 100 derived from component uptime data"
+      ]
+    },
+    {
+      "name": "Stat Cards UI Component",
+      "tool": "React (or project frontend framework)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Build the four-stat-card row component that displays open incidents, 7-day MTTR, incidents this month, and uptime %, wired to the metrics computation functions.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are building the stat-card row for the internal incident dashboard. Render four cards — open incidents, 7-day MTTR, incidents this month, overall uptime % — using values from the metrics computation utilities. Match the dark-themed Figma design tokens for spacing, typography, and card styling, and ensure the cards re-render when incident data changes.",
+      "acceptance_criteria": [
+        "StatCards component renders exactly four cards with correct labels",
+        "Each card displays the value returned by its corresponding metrics function",
+        "Component re-renders with updated values when the incidents prop changes",
+        "Card styling uses the dark theme design tokens (background, text, border colors) rather than hardcoded values"
+      ]
+    },
+    {
+      "name": "Severity Color Mapping",
+      "tool": "Design tokens (Figma dark theme spec)",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            "SEV1"
+          ],
+          "name": "SEV1 maps to red",
+          "expect": {
+            "equals": "#FF3B30"
+          },
+          "export": "severityColor",
+          "module": "src/lib/severity.js"
+        },
+        {
+          "args": [
+            "SEV2"
+          ],
+          "name": "SEV2 maps to orange",
+          "expect": {
+            "equals": "#FF9500"
+          },
+          "export": "severityColor",
+          "module": "src/lib/severity.js"
+        },
+        {
+          "args": [
+            "SEV3"
+          ],
+          "name": "SEV3 maps to yellow",
+          "expect": {
+            "equals": "#FFCC00"
+          },
+          "export": "severityColor",
+          "module": "src/lib/severity.js"
+        }
+      ],
+      "capability": "Implement a pure function mapping incident severity (SEV1/SEV2/SEV3) to its exact design-token color, enforcing the constraint that these colors are reserved exclusively for severity indication.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the severity-to-color mapping used by the incident timeline. Write a pure function that takes a severity string (SEV1, SEV2, SEV3) and returns the exact hex/token color defined in the Figma spec: SEV1 red, SEV2 orange, SEV3 yellow. This mapping must be the single source of truth so these colors are never reused elsewhere in the UI for non-severity purposes.",
+      "acceptance_criteria": [
+        "severityColor('SEV1') returns the red token value",
+        "severityColor('SEV2') returns the orange token value",
+        "severityColor('SEV3') returns the yellow token value",
+        "No other UI element (buttons, links, other badges) reuses these exact severity color values for a non-severity purpose"
+      ]
+    },
+    {
+      "name": "Severity Incident Timeline Component",
+      "tool": "React (or project frontend framework)",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [],
+      "capability": "Build the incident timeline component that lists incidents in chronological order, color-coded by severity using the severity color mapping.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are building the severity-colored incident timeline for the internal dashboard. Render incidents in reverse-chronological order, using the severityColor mapping to color each timeline entry's indicator by SEV1/SEV2/SEV3. Ensure the component reads live incident data and does not hardcode colors outside the shared severity mapping.",
+      "acceptance_criteria": [
+        "Timeline renders incidents ordered from most recent to oldest",
+        "Each timeline entry's severity indicator color matches the output of severityColor for that incident's severity",
+        "Timeline updates when the underlying incident data changes",
+        "No severity color is hardcoded inline outside the shared severityColor mapping"
+      ]
+    },
+    {
+      "name": "State Chip Mapping & Component",
+      "tool": "Design tokens (Figma dark theme spec)",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            "open"
+          ],
+          "name": "open state maps to correct chip config",
+          "expect": {
+            "contains": {
+              "color": "string",
+              "label": "string"
+            }
+          },
+          "export": "stateChipConfig",
+          "module": "src/lib/state.js"
+        },
+        {
+          "args": [
+            "resolved"
+          ],
+          "name": "resolved state maps to correct chip config",
+          "expect": {
+            "contains": {
+              "color": "string",
+              "label": "string"
+            }
+          },
+          "export": "stateChipConfig",
+          "module": "src/lib/state.js"
+        },
+        {
+          "args": [
+            "bogus_state"
+          ],
+          "name": "unknown state throws rather than silently defaulting",
+          "expect": {
+            "throws": true
+          },
+          "export": "stateChipConfig",
+          "module": "src/lib/state.js"
+        }
+      ],
+      "capability": "Implement a pure function mapping exact DB incident state values (open/investigating/identified/resolved) to chip label/color, and the chip component that renders it.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the state chip used to display an incident's current state. Write a pure function that takes the exact DB state string (open, investigating, identified, resolved) and returns its display label and design-token color, then build the chip component that renders this. The chip must reflect the literal DB state with no derived or inferred states.",
+      "acceptance_criteria": [
+        "stateChipConfig('open') returns the correct label and color for the open state",
+        "stateChipConfig('investigating') returns the correct label and color for the investigating state",
+        "stateChipConfig('identified') returns the correct label and color for the identified state",
+        "stateChipConfig('resolved') returns the correct label and color for the resolved state",
+        "StateChip component renders the label and color returned by stateChipConfig for a given incident's state prop"
+      ]
+    },
+    {
+      "name": "Dashboard Data Fetching & Live Refresh",
+      "tool": "Internal REST API (GET /api/incidents)",
+      "priority": "P1",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Implement the data-fetching layer that loads incident data from the backend API into the dashboard so stat cards, timeline, and chips reflect live DB state.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_004",
+        "SKILL_005"
+      ],
+      "prompt_template": "You are wiring the internal dashboard to live incident data. Implement a data-fetching hook/service that retrieves incidents from the backend REST API on mount and on a refresh interval or event, exposing loading/error/data states to the stat cards, timeline, and state chip components. Ensure state chips always reflect the exact current DB state with no client-side caching drift.",
+      "acceptance_criteria": [
+        "Dashboard fetches incident data from the API on initial load",
+        "Fetched data is passed through to stat cards, timeline, and chip components without transformation that alters DB state values",
+        "A loading state is shown while the initial fetch is in flight",
+        "An error state is shown if the fetch fails"
+      ]
+    },
+    {
+      "name": "Dark Theme Token Integration",
+      "tool": "Design tokens (Figma dark theme spec)",
+      "priority": "P1",
+      "skill_id": "SKILL_007",
+      "testcases": [],
+      "capability": "Apply the Figma dark-theme design tokens (colors, spacing, typography) consistently across the stat cards, timeline, and chips to match the design spec.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_004",
+        "SKILL_005"
+      ],
+      "prompt_template": "You are applying the dark-theme design tokens from the Figma spec to the internal dashboard's stat cards, severity timeline, and state chips. Ensure background, text, border, and spacing values are pulled from the shared token set rather than hardcoded, and that the resulting UI visually matches the Figma dark theme.",
+      "acceptance_criteria": [
+        "Stat cards, timeline, and chips use shared dark-theme token variables for background/text/border colors",
+        "No component hardcodes a raw hex/color value outside the shared token set or the severity/state mappings",
+        "Rendered dashboard visually matches the Figma dark theme spec for spacing and typography"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-30",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 7,
+    "p0_count": 5,
+    "p1_count": 2,
+    "p2_count": 0
+  }
+}
