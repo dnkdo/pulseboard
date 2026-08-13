@@ -1,0 +1,44 @@
+[
+  {
+    "id": "seed-comp-core-api",
+    "name": "Core API",
+    "description": "Primary REST API gateway serving client and server workspaces.",
+    "category": "API",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-auth-api",
+    "name": "Authentication API",
+    "description": "Login, session management, and token issuance.",
+    "category": "API",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-status-page",
+    "name": "Public Status Page",
+    "description": "Customer-facing status page and incident banner.",
+    "category": "Web",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-dashboard",
+    "name": "Internal Dashboard",
+    "description": "Internal incident-management dashboard UI.",
+    "category": "Web",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-primary-db",
+    "name": "Primary Database",
+    "description": "Primary relational datastore backing incidents and components.",
+    "category": "Infrastructure",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-load-balancer",
+    "name": "Load Balancer",
+    "description": "Edge load balancer distributing traffic across API instances.",
+    "category": "Infrastructure",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  }
+]
