@@ -1,0 +1,210 @@
+{
+  "skills": [
+    {
+      "name": "CSV Incident Serializer",
+      "tool": "Custom CSV serializer (no external dependency)",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            []
+          ],
+          "name": "returns header-only row for empty incident array",
+          "expect": {
+            "equals": "id,title,severity,state,createdAt,resolvedAt,mttrMinutes"
+          },
+          "export": "toCSV",
+          "module": "src/utils/exportIncidents.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "state": "open",
+                "title": "Payment, gateway \"down\"",
+                "severity": "sev1",
+                "createdAt": "2026-08-01T00:00:00Z",
+                "resolvedAt": "",
+                "mttrMinutes": ""
+              }
+            ]
+          ],
+          "name": "escapes commas and quotes in title field",
+          "expect": {
+            "contains": "\"Payment, gateway \"\"down\"\"\""
+          },
+          "export": "toCSV",
+          "module": "src/utils/exportIncidents.js"
+        }
+      ],
+      "capability": "Convert an array of incident history records into a well-formed, RFC4180-compliant CSV string with a header row.",
+      "dependencies": [],
+      "prompt_template": "You are implementing a pure utility function that serializes incident history data into CSV format for offline reporting exports. Ensure fields containing commas, quotes, or newlines are properly escaped per RFC4180, and that the column order matches the agreed export schema (id, title, severity, state, createdAt, resolvedAt, mttrMinutes). Do not perform any I/O or DOM access; only return the CSV string.",
+      "acceptance_criteria": [
+        "toCSV(incidents) returns a string whose first line is the header row matching the export schema",
+        "Field values containing commas or double quotes are escaped by wrapping the field in double quotes and doubling internal quotes"
+      ]
+    },
+    {
+      "name": "JSON Incident Serializer",
+      "tool": "Custom JSON serializer (no external dependency)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "title": "API outage"
+              }
+            ]
+          ],
+          "name": "serializes single incident to pretty JSON",
+          "expect": {
+            "equals": "[\n  {\n    \"id\": 1,\n    \"title\": \"API outage\"\n  }\n]"
+          },
+          "export": "toJSON",
+          "module": "src/utils/exportIncidents.js"
+        }
+      ],
+      "capability": "Convert an array of incident history records into a pretty-printed, parseable JSON string for offline reporting exports.",
+      "dependencies": [],
+      "prompt_template": "You are implementing a pure utility function that serializes incident history data into a pretty-printed JSON string for offline reporting exports. The output must be valid JSON that round-trips through JSON.parse without loss, using 2-space indentation. Do not perform any I/O or DOM access; only return the string.",
+      "acceptance_criteria": [
+        "toJSON(incidents) returns a string that JSON.parse can deserialize back into an array with the same length and field values as the input",
+        "toJSON output uses 2-space indentation matching JSON.stringify(data, null, 2)"
+      ]
+    },
+    {
+      "name": "Export Row Field Mapper",
+      "tool": "Custom mapping utility (no external dependency)",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            {
+              "id": 1,
+              "state": "investigating",
+              "title": "API down",
+              "severity": "sev1",
+              "createdAt": "2026-08-01T10:00:00Z",
+              "resolvedAt": null,
+              "mttrMinutes": null
+            }
+          ],
+          "name": "maps open incident with null resolution fields",
+          "expect": {
+            "contains": {
+              "id": "number",
+              "state": "string",
+              "title": "string",
+              "severity": "string"
+            }
+          },
+          "export": "mapIncidentToExportRow",
+          "module": "src/utils/exportIncidents.js"
+        }
+      ],
+      "capability": "Flatten and format a raw incident object (as returned by the dashboard API) into a flat row shape suitable for CSV/JSON export, including human-readable severity/state labels and ISO timestamps.",
+      "dependencies": [],
+      "prompt_template": "You are implementing a pure function that maps a single raw incident record from the dashboard API into the flat, export-ready row shape consumed by the CSV and JSON serializers. Reuse the same severity and state label conventions already established by the Severity Timeline and State Chips components so exported labels match what users see on screen. Handle null resolvedAt/mttrMinutes for still-open incidents without throwing.",
+      "acceptance_criteria": [
+        "mapIncidentToExportRow(incident) returns a flat object containing id, title, severity, state, createdAt, resolvedAt, and mttrMinutes keys",
+        "mapIncidentToExportRow does not throw when resolvedAt or mttrMinutes is null (open incident)"
+      ]
+    },
+    {
+      "name": "Export Scope Filter",
+      "tool": "Custom filter utility (no external dependency)",
+      "priority": "P1",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "sev1"
+              },
+              {
+                "id": 2,
+                "severity": "sev2"
+              }
+            ],
+            {
+              "severity": "sev1"
+            }
+          ],
+          "name": "filters incidents by severity",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "severity": "sev1"
+              }
+            ]
+          },
+          "export": "filterIncidentsForExport",
+          "module": "src/utils/exportIncidents.js"
+        }
+      ],
+      "capability": "Filter the full incident history array down to the records matching a user-selected export scope (date range and/or severity) before serialization.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are implementing a pure function that filters an incident history array by optional severity and date-range criteria supplied by the export dialog, returning only matching incidents in their original order. Treat omitted filter keys as no-op (do not exclude records on unset criteria).",
+      "acceptance_criteria": [
+        "filterIncidentsForExport(incidents, {severity}) returns only incidents whose severity strictly matches the given value",
+        "filterIncidentsForExport(incidents, {}) returns all incidents unchanged when no filter criteria are supplied"
+      ]
+    },
+    {
+      "name": "Export Button UI Component",
+      "tool": "React component",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [],
+      "capability": "Render an Export control on the Incident History view offering CSV and JSON options, invoking the serializer and filter utilities and triggering a browser file download on selection.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are building the Export button/dropdown for the Incident History section of the internal dashboard, placed alongside the existing Stat Cards, Severity Timeline, and State Chips components. On selecting CSV or JSON, gather the currently visible (or filtered) incident history, map and serialize it via the export utilities, and trigger a file download named incident-history-<YYYY-MM-DD>.<ext>. The control must be keyboard-accessible and show a disabled/loading state while data is being prepared.",
+      "acceptance_criteria": [
+        "Clicking Export > CSV downloads a file named incident-history-<date>.csv containing the CSV output of toCSV",
+        "Clicking Export > JSON downloads a file named incident-history-<date>.json containing the JSON output of toJSON",
+        "The Export control is reachable and operable via keyboard (Tab + Enter/Space)"
+      ]
+    },
+    {
+      "name": "Browser Download Trigger Helper",
+      "tool": "Browser Blob/URL API",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Trigger a client-side file download of a given string payload (CSV or JSON) with a specified filename and MIME type, using a Blob and a temporary anchor element.",
+      "dependencies": [
+        "SKILL_005"
+      ],
+      "prompt_template": "You are implementing a small DOM utility that takes a string payload, filename, and MIME type, and triggers a browser download without navigating the page. Use URL.createObjectURL on a Blob and a programmatically-clicked anchor element, then revoke the object URL after the click to avoid memory leaks. This function has no meaningful return value; its effect is the triggered download.",
+      "acceptance_criteria": [
+        "Calling the download helper with CSV content and filename 'incident-history-2026-08-13.csv' results in a browser download of that filename with type text/csv",
+        "The helper revokes the created object URL after triggering the download so no blob URLs leak"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-36",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 6,
+    "p0_count": 5,
+    "p1_count": 1,
+    "p2_count": 0
+  }
+}
