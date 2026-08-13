@@ -1,0 +1,249 @@
+{
+  "skills": [
+    {
+      "name": "Document uptime formula spec",
+      "tool": "Markdown docs",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [],
+      "capability": "Write a precise, deterministic specification of how per-component and overall uptime % are calculated from incident history, including which incident states count as downtime and how partial-period/overlapping incidents are handled.",
+      "dependencies": [],
+      "prompt_template": "You are a backend engineer documenting the uptime calculation algorithm for Pulseboard. Write docs/uptime-calculation.md defining the formula uptime% = (total_period_time - downtime_time) / total_period_time * 100, specifying exactly which incident lifecycle states (investigating, identified vs resolved) count as non-operational time, how incidents are clipped to the reporting period, and how overlapping incidents across components are merged for the overall calculation. Be exact enough that two engineers implementing independently would produce identical numbers.",
+      "acceptance_criteria": [
+        "docs/uptime-calculation.md exists and states the formula uptime% = (total_period_time - downtime_time) / total_period_time * 100",
+        "Doc explicitly enumerates which incident states/timestamps mark the start and end of downtime"
+      ]
+    },
+    {
+      "name": "Extract downtime interval from incident",
+      "tool": "Node.js",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            {
+              "status": "resolved",
+              "createdAt": "2026-01-05T10:00:00Z",
+              "resolvedAt": "2026-01-05T12:00:00Z"
+            }
+          ],
+          "name": "resolved incident yields start/end matching createdAt/resolvedAt",
+          "expect": {
+            "equals": {
+              "end": "2026-01-05T12:00:00Z",
+              "start": "2026-01-05T10:00:00Z"
+            }
+          },
+          "export": "extractDowntimeInterval",
+          "module": "src/services/uptime.js"
+        }
+      ],
+      "capability": "Implement a pure function that derives the downtime start/end timestamps for a single incident from its lifecycle timestamps.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are implementing incident downtime interval extraction for Pulseboard's uptime engine in src/services/uptime.js. Write extractDowntimeInterval(incident) that returns { start, end } ISO timestamps representing when the incident began impacting the component (createdAt) and when it stopped (resolvedAt), per the rules in docs/uptime-calculation.md. Unresolved incidents should return an end equal to 'now' or a passed reference time, not null.",
+      "acceptance_criteria": [
+        "extractDowntimeInterval returns { start, end } matching the incident's createdAt/resolvedAt fields for a resolved incident",
+        "extractDowntimeInterval handles an unresolved incident by returning an end timestamp rather than null or undefined"
+      ]
+    },
+    {
+      "name": "Clip interval to reporting period",
+      "tool": "Node.js",
+      "priority": "P1",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            {
+              "end": "2026-01-01T02:00:00Z",
+              "start": "2025-12-31T23:00:00Z"
+            },
+            "2026-01-01T00:00:00Z",
+            "2026-01-31T00:00:00Z"
+          ],
+          "name": "interval starting before period start is clipped to period start",
+          "expect": {
+            "contains": {
+              "durationMs": 7200000
+            }
+          },
+          "export": "clipIntervalToPeriod",
+          "module": "src/services/uptime.js"
+        }
+      ],
+      "capability": "Implement a pure function that clips a downtime interval to a reporting period's start/end boundaries and returns the clipped duration.",
+      "dependencies": [
+        "SKILL_002"
+      ],
+      "prompt_template": "You are implementing period-boundary clipping for Pulseboard's uptime engine in src/services/uptime.js. Write clipIntervalToPeriod(interval, periodStart, periodEnd) that clamps an incident's downtime interval to the reporting window and returns { start, end, durationMs }, per docs/uptime-calculation.md. Incidents that started before the period or are still ongoing past the period end must be clipped, not excluded.",
+      "acceptance_criteria": [
+        "clipIntervalToPeriod clamps an interval starting before periodStart to begin at periodStart",
+        "clipIntervalToPeriod returns durationMs equal to the clipped interval's length in milliseconds"
+      ]
+    },
+    {
+      "name": "Calculate per-component uptime %",
+      "tool": "Node.js",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            [],
+            "2026-01-01T00:00:00Z",
+            "2026-01-31T00:00:00Z"
+          ],
+          "name": "no incidents yields 100% uptime",
+          "expect": {
+            "equals": 100
+          },
+          "export": "calculateComponentUptime",
+          "module": "src/services/uptime.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "status": "resolved",
+                "createdAt": "2026-01-05T10:00:00Z",
+                "resolvedAt": "2026-01-05T12:00:00Z"
+              }
+            ],
+            "2026-01-01T00:00:00Z",
+            "2026-01-31T00:00:00Z"
+          ],
+          "name": "one 2-hour incident over a 720-hour period yields 99.72%",
+          "expect": {
+            "equals": 99.72
+          },
+          "export": "calculateComponentUptime",
+          "module": "src/services/uptime.js"
+        }
+      ],
+      "capability": "Implement a pure function that computes a single component's uptime percentage over a period from its list of incidents.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are implementing the per-component uptime calculator for Pulseboard in src/services/uptime.js. Write calculateComponentUptime(incidents, periodStart, periodEnd) that sums clipped downtime across all of the component's incidents (using extractDowntimeInterval and clipIntervalToPeriod), then returns (totalPeriodMs - downtimeMs) / totalPeriodMs * 100 rounded to 2 decimal places, per docs/uptime-calculation.md.",
+      "acceptance_criteria": [
+        "calculateComponentUptime returns 100 when the incidents array is empty",
+        "calculateComponentUptime returns the exact expected percentage (rounded to 2 decimals) for a component with one known downtime interval over a fixed period"
+      ]
+    },
+    {
+      "name": "Calculate overall system uptime %",
+      "tool": "Node.js",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "status": "resolved",
+                "createdAt": "2026-01-01T00:00:00Z",
+                "resolvedAt": "2026-01-01T02:00:00Z",
+                "componentId": "api"
+              },
+              {
+                "status": "resolved",
+                "createdAt": "2026-01-01T01:00:00Z",
+                "resolvedAt": "2026-01-01T03:00:00Z",
+                "componentId": "web"
+              }
+            ],
+            "2026-01-01T00:00:00Z",
+            "2026-01-02T00:00:00Z"
+          ],
+          "name": "overlapping incidents across components merge to 3 hours downtime over 24h -> 87.5%",
+          "expect": {
+            "equals": 87.5
+          },
+          "export": "calculateOverallUptime",
+          "module": "src/services/uptime.js"
+        }
+      ],
+      "capability": "Implement a pure function that computes aggregate system uptime by merging overlapping downtime intervals across all components so simultaneous incidents are not double-counted.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_003",
+        "SKILL_004"
+      ],
+      "prompt_template": "You are implementing the overall uptime calculator for Pulseboard in src/services/uptime.js. Write calculateOverallUptime(allIncidents, periodStart, periodEnd) that clips every incident's downtime interval to the period, merges overlapping/adjacent intervals across all components into a single union of downtime windows, and returns (totalPeriodMs - unionDowntimeMs) / totalPeriodMs * 100 rounded to 2 decimal places, per docs/uptime-calculation.md.",
+      "acceptance_criteria": [
+        "calculateOverallUptime merges two overlapping incidents from different components into a single downtime window instead of summing them separately",
+        "calculateOverallUptime returns the exact expected percentage for a fixed 24-hour period with known overlapping incidents"
+      ]
+    },
+    {
+      "name": "Format uptime % for display",
+      "tool": "Node.js",
+      "priority": "P1",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [
+            99.7222
+          ],
+          "name": "rounds a raw uptime value to 2 decimals with percent sign",
+          "expect": {
+            "equals": "99.72%"
+          },
+          "export": "formatUptimePercentage",
+          "module": "src/services/uptime.js"
+        },
+        {
+          "args": [
+            100
+          ],
+          "name": "formats exact 100 as 100.00%",
+          "expect": {
+            "equals": "100.00%"
+          },
+          "export": "formatUptimePercentage",
+          "module": "src/services/uptime.js"
+        }
+      ],
+      "capability": "Implement a pure formatting function that converts a raw uptime number into a consistent, human-readable percentage string for dashboard and status page display.",
+      "dependencies": [
+        "SKILL_004"
+      ],
+      "prompt_template": "You are implementing display formatting for uptime values in Pulseboard in src/services/uptime.js. Write formatUptimePercentage(value) that returns a string with exactly 2 decimal places followed by a percent sign, e.g. 99.7222 -> '99.72%' and 100 -> '100.00%', so the dashboard and public status page render identical, deterministic text.",
+      "acceptance_criteria": [
+        "formatUptimePercentage rounds to exactly 2 decimal places and appends a percent sign",
+        "formatUptimePercentage(100) returns '100.00%' rather than '100%'"
+      ]
+    },
+    {
+      "name": "Fixed-seed uptime test suite",
+      "tool": "Vitest",
+      "priority": "P0",
+      "skill_id": "SKILL_007",
+      "testcases": [],
+      "capability": "Write a deterministic Vitest suite that asserts exact expected per-component and overall uptime percentages against the project's fixed/injected seed incident dataset.",
+      "dependencies": [
+        "SKILL_004",
+        "SKILL_005",
+        "SKILL_006"
+      ],
+      "prompt_template": "You are writing the verification test suite for Pulseboard's uptime engine. Create tests/uptime.test.js that imports the fixed seed incident dataset and, for each seeded component plus the overall system, asserts calculateComponentUptime/calculateOverallUptime return exact pre-computed expected percentages (not ranges or approximations) for a fixed reporting period, exercising zero-incident, single-incident, and overlapping-incident cases.",
+      "acceptance_criteria": [
+        "npm test runs tests/uptime.test.js and it passes with 0 failures",
+        "The suite asserts exact numeric equality (not toBeCloseTo with wide tolerance) against pre-computed expected percentages for the fixed seed dataset"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-34",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 7,
+    "p0_count": 5,
+    "p1_count": 2,
+    "p2_count": 0
+  }
+}
