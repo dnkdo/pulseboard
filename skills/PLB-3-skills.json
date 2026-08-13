@@ -1,0 +1,277 @@
+{
+  "skills": [
+    {
+      "name": "Overall Status Banner Logic",
+      "tool": "Internal Incident API (GET /api/incidents)",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            []
+          ],
+          "name": "no active incidents returns operational",
+          "expect": {
+            "contains": {
+              "status": "string"
+            }
+          },
+          "export": "computeOverallStatus",
+          "module": "src/lib/status.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": "1",
+                "status": "investigating",
+                "severity": "SEV2"
+              },
+              {
+                "id": "2",
+                "status": "identified",
+                "severity": "SEV1"
+              }
+            ]
+          ],
+          "name": "multiple active incidents returns highest severity",
+          "expect": {
+            "contains": {
+              "severity": "SEV1"
+            }
+          },
+          "export": "computeOverallStatus",
+          "module": "src/lib/status.js"
+        }
+      ],
+      "capability": "Compute the public status page's aggregate banner state (operational vs. highest-severity active incident color/label) from the current list of incidents.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the overall status banner for the public status page. Given the list of incidents from the shared incident API, derive a single aggregate status: 'operational' when there are zero active incidents, or the color/label of the highest-severity active incident when one or more exist. Do not mutate incident data or introduce a separate status field on the backend; compute this purely from existing incident/severity data.",
+      "acceptance_criteria": [
+        "computeOverallStatus returns 'operational' with no severity color when the incident list has zero active incidents",
+        "computeOverallStatus returns the color/label of the single highest-severity incident when multiple concurrent active incidents exist"
+      ]
+    },
+    {
+      "name": "Component Health Tile Rendering",
+      "tool": "Internal Component API (GET /api/components)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            0.9987
+          ],
+          "name": "formats uptime ratio as percentage string",
+          "expect": {
+            "equals": "99.87%"
+          },
+          "export": "formatUptimePercentage",
+          "module": "src/lib/uptime.js"
+        }
+      ],
+      "capability": "Render per-component health tiles on the public status page showing each component's name, status, and uptime percentage sourced from the shared component/uptime API.",
+      "dependencies": [],
+      "prompt_template": "You are building the per-component health tile grid for the public status page. Each tile must display the component name, a status indicator, and a formatted uptime percentage pulled from the existing component/uptime endpoints — do not recompute uptime locally. Match the Figma light-theme tokens for tile styling and ensure severity colors are only applied when a component is actually impacted.",
+      "acceptance_criteria": [
+        "formatUptimePercentage converts a raw uptime ratio (e.g. 0.9987) into a display string with two decimal places and a percent sign",
+        "Component tiles render for every component returned by the API, including components with 100% uptime and no incidents"
+      ]
+    },
+    {
+      "name": "Active Incident Card Display",
+      "tool": "Internal Incident API (GET /api/incidents)",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": "1",
+                "status": "resolved",
+                "severity": "SEV2"
+              }
+            ]
+          ],
+          "name": "all resolved incidents yields empty active list",
+          "expect": {
+            "equals": []
+          },
+          "export": "filterActiveIncidents",
+          "module": "src/lib/incidents.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": "1",
+                "status": "resolved",
+                "severity": "SEV1"
+              },
+              {
+                "id": "2",
+                "status": "investigating",
+                "severity": "SEV3"
+              },
+              {
+                "id": "3",
+                "status": "identified",
+                "severity": "SEV1"
+              }
+            ]
+          ],
+          "name": "mixed statuses returns only unresolved sorted by severity",
+          "expect": {
+            "contains": [
+              {
+                "id": "3",
+                "status": "identified",
+                "severity": "SEV1"
+              }
+            ]
+          },
+          "export": "filterActiveIncidents",
+          "module": "src/lib/incidents.js"
+        }
+      ],
+      "capability": "Filter and render active (unresolved) incident cards on the public status page, correctly handling zero, one, and multiple concurrent active incidents.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are implementing the active incident card section of the public status page. It must render nothing when there are zero unresolved incidents, exactly one card when there is one, and one card per incident (ordered by severity then start time) when multiple concurrent active incidents exist. Only rely on the shared incident status field to decide what counts as active — do not introduce a separate 'published' flag.",
+      "acceptance_criteria": [
+        "filterActiveIncidents returns an empty array when all incidents are resolved",
+        "filterActiveIncidents returns only incidents whose status is not 'resolved', ordered by severity",
+        "Active incident cards disappear from the page automatically once an incident's status changes to resolved, with no manual publish step"
+      ]
+    },
+    {
+      "name": "Past Incidents Reverse-Chronological List",
+      "tool": "Internal Incident API (GET /api/incidents)",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": "1",
+                "status": "resolved",
+                "resolvedAt": "2026-08-01T00:00:00Z"
+              },
+              {
+                "id": "2",
+                "status": "resolved",
+                "resolvedAt": "2026-08-10T00:00:00Z"
+              }
+            ]
+          ],
+          "name": "sorts resolved incidents newest first",
+          "expect": {
+            "contains": [
+              {
+                "id": "2",
+                "status": "resolved",
+                "resolvedAt": "2026-08-10T00:00:00Z"
+              }
+            ]
+          },
+          "export": "sortPastIncidentsDesc",
+          "module": "src/lib/incidents.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": "1",
+                "status": "investigating",
+                "resolvedAt": null
+              }
+            ]
+          ],
+          "name": "excludes unresolved incidents",
+          "expect": {
+            "equals": []
+          },
+          "export": "sortPastIncidentsDesc",
+          "module": "src/lib/incidents.js"
+        }
+      ],
+      "capability": "Render a reverse-chronological list of resolved past incidents on the public status page.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are implementing the past incidents section of the public status page. Filter incidents to only those with status 'resolved' and sort them newest-first by resolution timestamp. Render each entry with title, affected component(s), severity, and resolved date, matching the Figma light-theme list styling.",
+      "acceptance_criteria": [
+        "sortPastIncidentsDesc returns resolved incidents ordered from most recently resolved to least recently resolved",
+        "Unresolved incidents are excluded from the past incidents list"
+      ]
+    },
+    {
+      "name": "Public Page Live Data Sync",
+      "tool": "Fetch/polling client against Internal Incident & Component API",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [],
+      "capability": "Keep the public status page automatically in sync with backend incident/component state via polling or refetch, with zero manual publish step.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003",
+        "SKILL_004"
+      ],
+      "prompt_template": "You are implementing automatic data refresh for the public status page so it reflects internal dashboard changes with no manual publish action. Poll or refetch the incident and component endpoints on a reasonable interval (or on window focus) and re-render the banner, tiles, active incidents, and past incidents accordingly. Do not add any admin action, cache-busting UI, or 'publish' button — the page must always read live state.",
+      "acceptance_criteria": [
+        "The public status page reflects a backend incident state change (e.g. PATCH to resolved) without requiring a page reload or manual publish action, within one polling interval",
+        "The page renders correctly on cold start with seeded data present on first load"
+      ]
+    },
+    {
+      "name": "Status Page Light Theme Tokens",
+      "tool": "Design tokens / Tailwind (or equivalent) config",
+      "priority": "P1",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Apply the Figma light-theme design tokens (colors, spacing, typography) across the public status page so severity colors are used only for severity indicators and nowhere else.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are applying the Figma light-theme design tokens to the public status page surface (banner, tiles, incident cards, past incidents list). Ensure SEV1/SEV2/SEV3 severity colors are reserved exclusively for severity indicators and are never reused for generic UI chrome. Keep the page visually cohesive as a single light-themed surface distinct from the internal dark-themed dashboard.",
+      "acceptance_criteria": [
+        "No SEV1/SEV2/SEV3 color token is applied to any non-severity UI element on the public status page",
+        "All public status page components use the light-theme token set, not the internal dashboard's dark-theme tokens"
+      ]
+    },
+    {
+      "name": "Public Status Page Layout Shell",
+      "tool": "Frontend routing (e.g. React Router / Next.js page)",
+      "priority": "P0",
+      "skill_id": "SKILL_007",
+      "testcases": [],
+      "capability": "Assemble the public status page route that composes the overall status banner, component tiles, active incident card(s), and past incidents list into one cohesive page.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003",
+        "SKILL_004"
+      ],
+      "prompt_template": "You are creating the public status page route that composes the banner, component health tiles, active incident section, and past incidents list into a single page in the correct visual order. The page must render fully populated on first load using seeded data and must not require any authentication, matching the Figma layout for the light-themed public surface.",
+      "acceptance_criteria": [
+        "The public status page route renders the banner, component tiles, active incident section, and past incidents list in the correct order on a single request",
+        "The page is accessible without authentication and renders non-empty content on a fresh seeded database"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "PLB-3",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T08:08:07.940908Z",
+    "total": 7,
+    "p0_count": 6,
+    "p1_count": 1,
+    "p2_count": 0
+  }
+}
