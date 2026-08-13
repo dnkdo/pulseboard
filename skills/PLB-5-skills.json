@@ -1,0 +1,347 @@
+{
+  "skills": [
+    {
+      "name": "Declare Incident API Endpoint",
+      "tool": "Express REST API",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            {
+              "title": "",
+              "summary": "",
+              "severity": "SEV2",
+              "components": []
+            }
+          ],
+          "name": "rejects incident missing required fields",
+          "expect": {
+            "contains": [
+              "title",
+              "components",
+              "summary"
+            ]
+          },
+          "export": "validateIncident",
+          "module": "src/lib/validateIncident.js"
+        },
+        {
+          "args": [
+            {
+              "title": "API latency spike",
+              "summary": "Elevated p99 latency",
+              "severity": "SEV2",
+              "components": [
+                "api"
+              ]
+            }
+          ],
+          "name": "accepts fully populated incident payload",
+          "expect": {
+            "equals": []
+          },
+          "export": "validateIncident",
+          "module": "src/lib/validateIncident.js"
+        }
+      ],
+      "capability": "Implements POST /api/incidents to validate required fields (title, severity, affected components, summary) and create a new incident in 'open' state.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the incident creation endpoint for Pulseboard's Express API. Validate that title, severity, at least one affected component, and summary are present, reject with a 400 and field-level errors if not, and otherwise persist a new incident with state 'open' and a server-generated timestamp/id. The created incident must be immediately readable via the incidents list endpoint with no caching delay.",
+      "acceptance_criteria": [
+        "POST with missing title, severity, components, or summary returns a 400 error with field-level validation messages",
+        "POST with all required fields creates an incident with state set to 'open'",
+        "Newly created incident is returned by GET /api/incidents in the same request cycle (no delay)"
+      ]
+    },
+    {
+      "name": "Declare Incident Form UI",
+      "tool": "React component",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            {
+              "title": "",
+              "summary": "x",
+              "severity": "SEV1",
+              "components": [
+                "api"
+              ]
+            }
+          ],
+          "name": "form validation blocks incomplete submission",
+          "expect": {
+            "equals": false
+          },
+          "export": "isFormValid",
+          "module": "src/components/IncidentForm.jsx"
+        },
+        {
+          "args": [
+            {
+              "title": "DB outage",
+              "summary": "Primary DB unreachable",
+              "severity": "SEV1",
+              "components": [
+                "db"
+              ]
+            }
+          ],
+          "name": "form validation passes complete submission",
+          "expect": {
+            "equals": true
+          },
+          "export": "isFormValid",
+          "module": "src/components/IncidentForm.jsx"
+        }
+      ],
+      "capability": "Builds the dashboard 'declare incident' form with title, severity, affected-components multi-select, and summary fields, blocking submission until required fields are valid.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are building the incident declaration form for the internal dashboard. Fields are title (text), severity (select), affected components (multi-select), and summary (textarea), all required. Disable submit and surface inline errors until all required fields are filled, then POST to the incidents API and route the user back to a timeline that already shows the new incident.",
+      "acceptance_criteria": [
+        "Submit button is disabled while any required field is empty",
+        "Inline validation errors are shown per-field on blur or submit attempt",
+        "Successful submit calls the incident-creation API and clears/resets the form"
+      ]
+    },
+    {
+      "name": "Sequential State Transition API",
+      "tool": "Express REST API",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            "open",
+            "investigating"
+          ],
+          "name": "allows immediate next state",
+          "expect": {
+            "equals": true
+          },
+          "export": "isValidTransition",
+          "module": "src/lib/incidentState.js"
+        },
+        {
+          "args": [
+            "open",
+            "identified"
+          ],
+          "name": "rejects skipped state",
+          "expect": {
+            "equals": false
+          },
+          "export": "isValidTransition",
+          "module": "src/lib/incidentState.js"
+        },
+        {
+          "args": [
+            "resolved",
+            "investigating"
+          ],
+          "name": "rejects reopening resolved incident",
+          "expect": {
+            "equals": false
+          },
+          "export": "isValidTransition",
+          "module": "src/lib/incidentState.js"
+        }
+      ],
+      "capability": "Implements PATCH /api/incidents/:id to advance an incident's state strictly along open → investigating → identified → resolved, rejecting skips and reopens with an API error.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are implementing the state-transition endpoint for incidents. Given the incident's current state and a requested next state, only allow moving to the immediate next state in the sequence open → investigating → identified → resolved; any skip (e.g. open → identified) or backward/reopen transition (e.g. resolved → investigating) must be rejected with a 400/422 error and no mutation. Valid transitions persist immediately and are reflected in subsequent reads.",
+      "acceptance_criteria": [
+        "Transitioning to the immediate next state in sequence succeeds and persists",
+        "Attempting to skip a state (e.g. open → identified) returns an API error and leaves state unchanged",
+        "Attempting to reopen a resolved incident (resolved → any earlier state) returns an API error and leaves state unchanged"
+      ]
+    },
+    {
+      "name": "State Transition UI Controls",
+      "tool": "React component",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            "investigating"
+          ],
+          "name": "returns next allowed state for investigating incident",
+          "expect": {
+            "equals": "identified"
+          },
+          "export": "getNextState",
+          "module": "src/lib/incidentState.js"
+        },
+        {
+          "args": [
+            "resolved"
+          ],
+          "name": "returns null next state for resolved incident",
+          "expect": {
+            "equals": null
+          },
+          "export": "getNextState",
+          "module": "src/lib/incidentState.js"
+        }
+      ],
+      "capability": "Renders dashboard controls that only offer the single valid next state for an incident and disables/hides all other transitions, including for resolved incidents.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are building the incident state-advance control shown on the dashboard incident detail/timeline view. Given an incident's current state, compute and display only the one legal next action (advance to the immediate next state); show no action at all once an incident is resolved. Wire the action to the state-transition API and reflect the API's rejection if a race condition causes an invalid transition attempt.",
+      "acceptance_criteria": [
+        "UI exposes exactly one advance action for non-resolved incidents, matching the sequential next state",
+        "UI exposes no state-changing action once an incident is resolved",
+        "If the API rejects a transition, the UI surfaces the error without corrupting local state"
+      ]
+    },
+    {
+      "name": "Active vs Past Incident Partitioning",
+      "tool": "Shared data-access module",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "state": "open"
+              },
+              {
+                "id": 2,
+                "state": "resolved"
+              },
+              {
+                "id": 3,
+                "state": "identified"
+              }
+            ]
+          ],
+          "name": "partitions mixed-state incidents into active and past",
+          "expect": {
+            "equals": {
+              "past": [
+                {
+                  "id": 2,
+                  "state": "resolved"
+                }
+              ],
+              "active": [
+                {
+                  "id": 1,
+                  "state": "open"
+                },
+                {
+                  "id": 3,
+                  "state": "identified"
+                }
+              ]
+            }
+          },
+          "export": "partitionIncidents",
+          "module": "src/lib/incidentPartition.js"
+        }
+      ],
+      "capability": "Provides a shared function that partitions all incidents into the public 'active' set (any non-resolved incident) and the 'past incidents' list (resolved), used identically by both dashboard and public page.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are implementing the shared partitioning logic that both the internal dashboard and the public status page read from. Given the full incident collection from the single shared data source, return the subset with state !== 'resolved' as active incidents and the subset with state === 'resolved' as past incidents, ordered most-recent-first. This function must be called on every read (no cached/stale snapshot) so a resolve action is reflected the instant it is persisted.",
+      "acceptance_criteria": [
+        "Incidents in any non-resolved state are classified as active",
+        "Incidents in resolved state are classified as past and excluded from active",
+        "Resolving an incident moves it from the active partition to the past partition on the very next read with no additional delay"
+      ]
+    },
+    {
+      "name": "Public Banner Status Aggregation",
+      "tool": "Shared logic module",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [
+            []
+          ],
+          "name": "no active incidents returns operational",
+          "expect": {
+            "equals": {
+              "status": "operational"
+            }
+          },
+          "export": "computeBannerStatus",
+          "module": "src/lib/bannerStatus.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "SEV3"
+              },
+              {
+                "id": 2,
+                "severity": "SEV1"
+              }
+            ]
+          ],
+          "name": "picks highest severity among multiple active incidents",
+          "expect": {
+            "equals": {
+              "status": "SEV1",
+              "incidentId": 2
+            }
+          },
+          "export": "computeBannerStatus",
+          "module": "src/lib/bannerStatus.js"
+        }
+      ],
+      "capability": "Computes the public status banner state from the active incident set: 'operational' when empty, otherwise the label/color of the highest-severity active incident.",
+      "dependencies": [
+        "SKILL_005"
+      ],
+      "prompt_template": "You are implementing the banner-status computation shared by the public status page. Given the list of currently active incidents (from the same partitioning logic used elsewhere), return an 'operational' status when the list is empty, or the severity/label of the single highest-severity incident in the list when one or more are active. Ties should resolve to the highest severity level (e.g. SEV1 over SEV2/SEV3). This must be recomputed from the live shared data source on every read.",
+      "acceptance_criteria": [
+        "Empty active-incident list returns an 'operational' banner state",
+        "Single active incident returns that incident's severity as the banner state",
+        "Multiple active incidents of differing severity return the highest-severity incident's state, and resolving it re-derives the next-highest-severity remaining incident"
+      ]
+    },
+    {
+      "name": "Resolve-Triggers-Sync Integration Test",
+      "tool": "Vitest + supertest (or equivalent HTTP test client)",
+      "priority": "P1",
+      "skill_id": "SKILL_007",
+      "testcases": [],
+      "capability": "Verifies end-to-end that PATCHing an incident to resolved on the dashboard immediately updates the public active-incident card, past-incidents list, and banner with zero sync delay.",
+      "dependencies": [
+        "SKILL_003",
+        "SKILL_005",
+        "SKILL_006"
+      ],
+      "prompt_template": "You are writing an integration test that proves the internal and public surfaces are truly one data source. Seed an incident, resolve it via the dashboard's PATCH endpoint, then immediately call the public status GET endpoint in the same test and assert the incident is absent from the active card, present in past incidents, and the banner reflects operational (or the next-highest-severity active incident) — with no artificial delay, polling, or cache-bust required between the two calls.",
+      "acceptance_criteria": [
+        "Resolving the only active incident causes the public active-incident card to be empty in the very next read",
+        "The resolved incident appears in the public past-incidents list in the very next read",
+        "The banner reflects 'operational', or the next-highest-severity active incident if others remain, in the very next read"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "PLB-5",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T08:08:07.940908Z",
+    "total": 7,
+    "p0_count": 6,
+    "p1_count": 1,
+    "p2_count": 0
+  }
+}
