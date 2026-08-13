@@ -1,0 +1,313 @@
+{
+  "skills": [
+    {
+      "name": "Scaffold monorepo folder structure",
+      "tool": "npm workspaces / filesystem",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [],
+          "name": "root package.json declares client/server workspaces",
+          "expect": {
+            "contains": [
+              "client",
+              "server"
+            ]
+          },
+          "export": "workspaces",
+          "module": "package.json"
+        }
+      ],
+      "capability": "Initializes the Pulseboard repository root with a workspace layout separating the client (dashboard + status-page surfaces) and server (shared API) packages.",
+      "dependencies": [],
+      "prompt_template": "You are setting up the root of the Pulseboard monorepo. Create a root package.json with npm workspaces pointing at client and server packages, and create the top-level directory structure: client/src/dashboard, client/src/status-page, client/src/shared, and server/src. Do not add product feature code — only the scaffolding needed for later epics to build on.",
+      "acceptance_criteria": [
+        "Root package.json declares workspaces including client and server",
+        "client/src contains dashboard, status-page, and shared subdirectories",
+        "server/src directory exists for the Express API"
+      ]
+    },
+    {
+      "name": "Initialize React 18 + Vite frontend",
+      "tool": "Vite CLI",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [],
+          "name": "client declares react and react-dom deps",
+          "expect": {
+            "contains": {
+              "react": "string",
+              "react-dom": "string"
+            }
+          },
+          "export": "dependencies",
+          "module": "client/package.json"
+        },
+        {
+          "args": [],
+          "name": "client declares vite devDependency",
+          "expect": {
+            "contains": {
+              "vite": "string"
+            }
+          },
+          "export": "devDependencies",
+          "module": "client/package.json"
+        }
+      ],
+      "capability": "Scaffolds the client package with Vite and React 18, wiring an entry point capable of mounting the dashboard and status-page surfaces.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are bootstrapping the Pulseboard frontend using Vite with the React 18 template inside the client/ workspace package. Add react and react-dom as dependencies pinned to v18, configure vite.config.js, and create a minimal entry point (main.jsx/App.jsx) that will later route between the dashboard and status-page surfaces. Keep it minimal — no product UI yet.",
+      "acceptance_criteria": [
+        "client/package.json lists react and react-dom as dependencies",
+        "client/package.json lists vite as a devDependency",
+        "client/vite.config.js exists and configures the React plugin",
+        "npm run dev in client starts the Vite dev server without error"
+      ]
+    },
+    {
+      "name": "Initialize Express backend",
+      "tool": "Express / Node.js",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [],
+          "name": "server declares express dependency",
+          "expect": {
+            "contains": {
+              "express": "string"
+            }
+          },
+          "export": "dependencies",
+          "module": "server/package.json"
+        }
+      ],
+      "capability": "Scaffolds the server package with Node.js and Express, exposing a base app instance ready for API routes and a local SQLite/JSON store.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are bootstrapping the Pulseboard backend inside the server/ workspace package using Node.js and Express. Add express as a dependency, create server/src/app.js exporting a configured Express app, and server/src/index.js that starts it on a configurable port. No incident/status-page routes yet — only the base server scaffold and a health endpoint.",
+      "acceptance_criteria": [
+        "server/package.json lists express as a dependency",
+        "server/src/app.js exports an Express application instance",
+        "Running the server starts without error and listens on a port"
+      ]
+    },
+    {
+      "name": "Configure Vitest test framework",
+      "tool": "Vitest",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [],
+          "name": "root declares test script",
+          "expect": {
+            "contains": {
+              "test": "string"
+            }
+          },
+          "export": "scripts",
+          "module": "package.json"
+        },
+        {
+          "args": [],
+          "name": "client declares vitest devDependency",
+          "expect": {
+            "contains": {
+              "vitest": "string"
+            }
+          },
+          "export": "devDependencies",
+          "module": "client/package.json"
+        }
+      ],
+      "capability": "Sets up Vitest as the shared test runner for both client and server packages, including jsdom environment for React component tests.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are configuring Vitest as the single test framework for the Pulseboard monorepo, covering both the client (React, jsdom environment) and server (Node environment) packages. Add vitest as a devDependency at the appropriate workspace levels, create vitest.config.js for each package, and add a `test` script to each package.json plus a root aggregate script. Do not write product tests yet, only the runner configuration.",
+      "acceptance_criteria": [
+        "client/package.json and server/package.json declare vitest as a devDependency",
+        "client/vitest.config.js sets the test environment to jsdom",
+        "Root package.json defines a test script that runs vitest across workspaces",
+        "npm test exits 0 on a fresh checkout with no test files failing"
+      ]
+    },
+    {
+      "name": "Create .adlc.json project config",
+      "tool": "filesystem (JSON config)",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [],
+          "name": ".adlc.json test_command references test runner",
+          "expect": {
+            "matches": "test"
+          },
+          "export": "test_command",
+          "module": ".adlc.json"
+        },
+        {
+          "args": [],
+          "name": ".adlc.json declares node/react tech stack",
+          "expect": {
+            "contains": [
+              "node",
+              "react"
+            ]
+          },
+          "export": "tech_stack",
+          "module": ".adlc.json"
+        },
+        {
+          "args": [],
+          "name": ".adlc.json requires no external services",
+          "expect": {
+            "equals": []
+          },
+          "export": "required_services",
+          "module": ".adlc.json"
+        }
+      ],
+      "capability": "Authors the .adlc.json configuration file declaring the test command, tech stack, and required services for downstream agent tooling.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are authoring the .adlc.json configuration file at the repo root for Pulseboard. Set test_command to the command that runs the full Vitest suite, declare tech_stack as node and react, and set required_services to an empty array since the app uses a local SQLite/JSON store with no external services. This file drives how downstream automation runs and validates the project.",
+      "acceptance_criteria": [
+        ".adlc.json declares a test_command referencing the test runner",
+        ".adlc.json declares tech_stack including node and react",
+        ".adlc.json declares required_services as an empty array"
+      ]
+    },
+    {
+      "name": "Configure ESLint and Prettier baseline",
+      "tool": "ESLint / Prettier",
+      "priority": "P1",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [],
+          "name": "root declares eslint and prettier devDependencies",
+          "expect": {
+            "contains": {
+              "eslint": "string",
+              "prettier": "string"
+            }
+          },
+          "export": "devDependencies",
+          "module": "package.json"
+        }
+      ],
+      "capability": "Establishes a shared ESLint and Prettier configuration across client and server packages to enforce consistent code style.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are setting up a shared ESLint and Prettier baseline for the Pulseboard monorepo. Add eslint and prettier as devDependencies, create root-level .eslintrc (or eslint.config.js) and .prettierrc configs covering both React (client) and Node (server) code, and add lint/format scripts to package.json. Do not fix unrelated existing lint violations outside this scaffolding task.",
+      "acceptance_criteria": [
+        "Root package.json declares eslint and prettier as devDependencies",
+        "A root ESLint config file exists and covers client and server source",
+        "A .prettierrc config file exists at the repo root",
+        "npm run lint exits 0 on the freshly scaffolded codebase"
+      ]
+    },
+    {
+      "name": "Configure Tailwind CSS baseline",
+      "tool": "Tailwind CSS",
+      "priority": "P1",
+      "skill_id": "SKILL_007",
+      "testcases": [
+        {
+          "args": [],
+          "name": "client declares tailwind toolchain devDependencies",
+          "expect": {
+            "contains": {
+              "postcss": "string",
+              "tailwindcss": "string",
+              "autoprefixer": "string"
+            }
+          },
+          "export": "devDependencies",
+          "module": "client/package.json"
+        }
+      ],
+      "capability": "Installs and configures Tailwind CSS in the client package so both the dashboard (dark theme) and status-page (light theme) surfaces can use utility classes and design tokens.",
+      "dependencies": [
+        "SKILL_002"
+      ],
+      "prompt_template": "You are configuring Tailwind CSS as the styling baseline for the Pulseboard client package. Add tailwindcss, postcss, and autoprefixer as devDependencies, generate tailwind.config.js and postcss.config.js scoped to client/src, and create the base CSS file with @tailwind directives imported by the app entry point. Leave theme customization (dark/light tokens, severity colors) minimal — just the working baseline.",
+      "acceptance_criteria": [
+        "client/package.json declares tailwindcss, postcss, and autoprefixer as devDependencies",
+        "client/tailwind.config.js exists with a content path covering client/src",
+        "client/src has a base stylesheet containing the @tailwind directives",
+        "The client build succeeds with Tailwind classes applied"
+      ]
+    },
+    {
+      "name": "Add CI smoke tests for build health",
+      "tool": "Vitest + Supertest + React Testing Library",
+      "priority": "P0",
+      "skill_id": "SKILL_008",
+      "testcases": [],
+      "capability": "Adds a minimal end-to-end smoke test suite covering an API health check endpoint and a trivial React component render to confirm the environment builds and runs.",
+      "dependencies": [
+        "SKILL_004"
+      ],
+      "prompt_template": "You are adding minimal smoke tests that prove the Pulseboard environment is wired correctly end-to-end. Add a GET /health endpoint on the Express app returning a 200 status with a simple JSON body, and write one server-side test asserting that response using Supertest. Add one trivial React component and a client-side test asserting it renders using React Testing Library. These are scaffolding smoke tests, not product feature tests.",
+      "acceptance_criteria": [
+        "GET /health on the Express app returns HTTP 200 with a status field",
+        "A server-side smoke test exercises the /health endpoint via Supertest and passes",
+        "A client-side smoke test renders a trivial component and passes",
+        "The full test suite (npm test) passes in CI on a clean checkout"
+      ]
+    },
+    {
+      "name": "Add Vercel-deployable build config",
+      "tool": "Vercel CLI / vercel.json",
+      "priority": "P1",
+      "skill_id": "SKILL_009",
+      "testcases": [
+        {
+          "args": [],
+          "name": "client declares a build script",
+          "expect": {
+            "contains": {
+              "build": "string"
+            }
+          },
+          "export": "scripts",
+          "module": "client/package.json"
+        }
+      ],
+      "capability": "Adds Vercel deployment configuration so the client build and Express API can both be deployed from the same repository.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are adding Vercel deployment configuration for Pulseboard. Create a vercel.json at the repo root that builds the client package as a static site and exposes the server package's Express app as a serverless function/API route, and ensure the client's build script outputs to the directory Vercel expects. Verify the configuration by running a local Vercel build (vercel build) and confirming it completes without error.",
+      "acceptance_criteria": [
+        "vercel.json exists at the repo root and defines builds for both client and server",
+        "client/package.json defines a build script producing a static output directory",
+        "A local Vercel build completes successfully with no configuration errors"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "PLB-1",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T08:08:07.940908Z",
+    "total": 9,
+    "p0_count": 6,
+    "p1_count": 3,
+    "p2_count": 0
+  }
+}
