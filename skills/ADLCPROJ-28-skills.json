@@ -1,0 +1,220 @@
+{
+  "skills": [
+    {
+      "name": "Define Incident/Component Schema",
+      "tool": "SQLite (better-sqlite3) or equivalent JSON store module",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [],
+          "name": "severity enum contains all three severities",
+          "expect": {
+            "contains": [
+              "SEV1",
+              "SEV2",
+              "SEV3"
+            ]
+          },
+          "export": "SEVERITIES",
+          "module": "server/src/db/schema.js"
+        },
+        {
+          "args": [],
+          "name": "incident status enum contains all four workflow states",
+          "expect": {
+            "contains": [
+              "open",
+              "investigating",
+              "identified",
+              "resolved"
+            ]
+          },
+          "export": "INCIDENT_STATUSES",
+          "module": "server/src/db/schema.js"
+        }
+      ],
+      "capability": "Define the shared Incident, Component, and state-transition schema (SQLite tables or JSON store shape) including severity and status enums used by every downstream epic.",
+      "dependencies": [],
+      "prompt_template": "You are a backend engineer defining the canonical data schema for Pulseboard. Create the Incident, Component, and StateTransition table/collection definitions (SQLite or JSON store) with fields id, title, severity (SEV1-3), status (open/investigating/identified/resolved), timestamps, and component links. Export severity and status enums as reusable constants so no other module hardcodes these strings.",
+      "acceptance_criteria": [
+        "Schema module exports a SEVERITIES constant containing SEV1, SEV2, SEV3",
+        "Schema module exports an INCIDENT_STATUSES constant containing open, investigating, identified, resolved",
+        "Component schema defines a status enum (e.g. operational/degraded/partial_outage/major_outage)",
+        "Schema supports linking an incident to one or more components"
+      ]
+    },
+    {
+      "name": "Injectable Deterministic Clock Utility",
+      "tool": "Node.js module (clock abstraction, no external deps)",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Implement a clock abstraction that can be fixed/overridden in tests so no code path calls Date.now() or performs wall-clock waits directly.",
+      "dependencies": [],
+      "prompt_template": "You are a backend engineer implementing test-determinism infrastructure. Build a clock utility module exposing a now() accessor used everywhere timestamps are needed, plus a test-only override (e.g. setClock/resetClock) so tests can pin time to a fixed value. Audit the codebase to ensure no other module calls Date.now() or new Date() directly outside this utility.",
+      "acceptance_criteria": [
+        "A single clock module is the only place Date.now()/new Date() is called for business timestamps",
+        "Tests can override the clock to a fixed timestamp and getNow() returns that fixed value deterministically",
+        "No test path relies on real wall-clock waits (setTimeout-based waits) to observe timestamp-dependent behavior"
+      ]
+    },
+    {
+      "name": "Seed Dataset Fixtures & Coverage Helpers",
+      "tool": "Node.js module / static JSON fixtures",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [],
+          "name": "seed data covers all three severities",
+          "expect": {
+            "equals": [
+              "SEV1",
+              "SEV2",
+              "SEV3"
+            ]
+          },
+          "export": "getSeedSeverities",
+          "module": "server/src/db/seedData.js"
+        },
+        {
+          "args": [],
+          "name": "seed data covers all four incident states",
+          "expect": {
+            "contains": [
+              "open",
+              "investigating",
+              "identified",
+              "resolved"
+            ]
+          },
+          "export": "getSeedIncidentStatuses",
+          "module": "server/src/db/seedData.js"
+        },
+        {
+          "args": [],
+          "name": "seed data has at least one active incident",
+          "expect": {
+            "gte": 1
+          },
+          "export": "getActiveIncidentCount",
+          "module": "server/src/db/seedData.js"
+        }
+      ],
+      "capability": "Author the seed dataset (sample components plus incidents spanning all severities and all states, including at least one active incident) with fixed, non-wall-clock timestamps.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002"
+      ],
+      "prompt_template": "You are a backend engineer building the seed dataset for Pulseboard so every dashboard and status page view is populated on first load. Author fixture data for components and incidents covering SEV1, SEV2, and SEV3 severities and all four states (open, investigating, identified, resolved), with at least one currently-active (non-resolved) incident. Use fixed injected timestamps from [[SKILL_002]]'s clock utility rather than Date.now(), and expose small pure helper functions summarizing the fixture coverage for tests.",
+      "acceptance_criteria": [
+        "Seed data includes incidents at every severity SEV1, SEV2, and SEV3",
+        "Seed data includes incidents in every status: open, investigating, identified, resolved",
+        "Seed data includes at least one active (non-resolved) incident",
+        "Seed data includes multiple sample components with varying statuses",
+        "All seed timestamps are fixed literal values, not generated via Date.now()"
+      ]
+    },
+    {
+      "name": "Incident/Component Data Access Layer",
+      "tool": "SQLite (better-sqlite3) or JSON store repository module",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [],
+      "capability": "Implement repository functions to read/write Incidents and Components against the store so downstream API epics have a stable data-access contract.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are a backend engineer implementing the data access layer consumed by the Public Status Page, Internal Dashboard, and Incident Workflow epics. Build repository functions (getAllIncidents, getIncidentById, getAllComponents, getComponentById, updateIncidentStatus, createIncident) against the schema from [[SKILL_001]], returning data shaped for API responses.",
+      "acceptance_criteria": [
+        "getAllIncidents returns incidents matching the schema shape defined in SKILL_001",
+        "getComponentById returns null for an unknown id rather than throwing",
+        "updateIncidentStatus persists a status change and records it in the state-transition history"
+      ]
+    },
+    {
+      "name": "Incident State Transition Validator",
+      "tool": "Pure JavaScript module (no external deps)",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            "open",
+            "investigating"
+          ],
+          "name": "adjacent forward transition is valid",
+          "expect": {
+            "equals": true
+          },
+          "export": "isValidTransition",
+          "module": "server/src/domain/incidentStateMachine.js"
+        },
+        {
+          "args": [
+            "resolved",
+            "open"
+          ],
+          "name": "backward transition is invalid",
+          "expect": {
+            "equals": false
+          },
+          "export": "isValidTransition",
+          "module": "server/src/domain/incidentStateMachine.js"
+        },
+        {
+          "args": [
+            "open",
+            "resolved"
+          ],
+          "name": "skipping intermediate states is invalid",
+          "expect": {
+            "equals": false
+          },
+          "export": "isValidTransition",
+          "module": "server/src/domain/incidentStateMachine.js"
+        }
+      ],
+      "capability": "Implement a pure function validating allowed incident state transitions (open→investigating→identified→resolved) and rejecting invalid/out-of-order transitions.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are a backend engineer implementing the incident state-transition rules that back the shared data model. Write a pure isValidTransition(fromStatus, toStatus) function encoding the allowed sequence open → investigating → identified → resolved, rejecting skips and backward transitions, for reuse by the seed validator and the future Incident Workflow epic.",
+      "acceptance_criteria": [
+        "isValidTransition returns true for each adjacent forward transition in the defined sequence",
+        "isValidTransition returns false for a backward transition (e.g. resolved to open)",
+        "isValidTransition returns false for a transition that skips a state (e.g. open directly to resolved)"
+      ]
+    },
+    {
+      "name": "Deterministic Reseed Command",
+      "tool": "Node.js CLI script / npm script invoked from Vitest setup",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Provide a reseed script/function that resets the store to the exact seed dataset on demand, callable from test setup so every test run starts from identical, deterministic state.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_003",
+        "SKILL_004"
+      ],
+      "prompt_template": "You are a backend engineer wiring up deterministic test infrastructure. Implement a reseed(store) function and an npm script (e.g. db:reseed) that wipes and reloads the store from the fixtures in [[SKILL_003]] using the injectable clock from [[SKILL_002]], and wire it into the Vitest global setup/beforeEach so every test starts from identical state with no wall-clock dependency.",
+      "acceptance_criteria": [
+        "Running the reseed command twice in a row produces byte-identical resulting dataset (same ids, timestamps, ordering)",
+        "Test suite setup invokes reseed before tests that depend on seed data, with no real-time waits involved",
+        "npm run db:reseed exits 0 and leaves the store populated with the full seed dataset"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-28",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 6,
+    "p0_count": 6,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
