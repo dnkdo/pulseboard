@@ -1,45 +1,76 @@
 name: ADLC Step 8 — Deploy
 
+# ── The contract Step 8 depends on ────────────────────────────────────────────
+# Phase 8 approve calls:
+#   POST /repos/<owner>/<repo>/actions/workflows/deploy.yml/dispatches
+#   body: { ref: "main", inputs: { epic_key, version } }
+# For that dispatch to return 204 (not 404):
+#   1. This file lives at .github/workflows/deploy.yml on main.
+#   2. It declares `on: workflow_dispatch:`.
+#   3. It declares inputs `epic_key` and `version` — names must match exactly.
+# Deploys to Vercel using the VERCEL_* Actions secrets set by the ADLC Hub's
+# one-click deploy setup (POST /projects/{id}/deploy-setup).
 on:
   workflow_dispatch:
     inputs:
       epic_key:
         required: true
         type: string
-        description: "Jira Epic/subtask key (e.g. SHOP-27)"
+        description: "Jira Epic/subtask key (e.g. RPG-53)"
       version:
         required: true
         type: string
         description: "Release version (e.g. v1.1.0)"
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    # "Create Git tag" pushes a tag back; default GITHUB_TOKEN is read-only.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - run: npm ci
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
 
-      - name: Verify build
-        id: build
-        run: npm test
+      - name: Pull Vercel prod env
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Deploy
+      - name: Build
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy to Vercel (prod)
         id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          echo "Deploying ${{ github.repository }} ${{ inputs.version }} for ${{ inputs.epic_key }}"
-          # TODO: real deploy steps go here. Left as a no-op so the pipeline
-          # completes end-to-end; the tag below is the part Step 8 observes.
-        continue-on-error: true
+          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed: $url"
 
       - name: Create Git tag
-        if: steps.build.outcome == 'success'
+        if: success()
+        continue-on-error: true
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
