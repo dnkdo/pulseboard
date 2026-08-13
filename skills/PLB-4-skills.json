@@ -1,0 +1,319 @@
+{
+  "skills": [
+    {
+      "name": "Live Stat Card Computation",
+      "tool": "Internal REST API (Express) / SQLite seed store",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "status": "open"
+              },
+              {
+                "status": "resolved"
+              },
+              {
+                "status": "investigating"
+              }
+            ],
+            99.95
+          ],
+          "name": "counts open incidents excluding resolved ones",
+          "expect": {
+            "contains": {
+              "openIncidents": 2
+            }
+          },
+          "export": "computeStatCards",
+          "module": "src/lib/stats.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "status": "resolved",
+                "created_at": "2026-08-10T00:00:00Z",
+                "resolved_at": "2026-08-10T01:30:00Z"
+              }
+            ],
+            99.95
+          ],
+          "name": "returns a numeric 7-day MTTR value",
+          "expect": {
+            "contains": {
+              "mttr7d": "number"
+            }
+          },
+          "export": "computeStatCards",
+          "module": "src/lib/stats.js"
+        }
+      ],
+      "capability": "Computes the four dashboard stat card values (open incidents, 7-day MTTR, incidents this month, overall uptime %) live from the current incident dataset.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the stat card data layer for the internal dashboard. Write a pure function that takes the current incident list (and a precomputed uptime percentage from the uptime service) and returns open incident count, 7-day MTTR, incidents-this-month count, and uptime %. Ensure values recompute on every fetch so cards never show stale data after an incident is created or its state changes.",
+      "acceptance_criteria": [
+        "computeStatCards excludes resolved incidents from the open incident count",
+        "computeStatCards calculates 7-day MTTR only from incidents resolved within the last 7 days",
+        "computeStatCards counts incidents created in the current calendar month for incidentsThisMonth",
+        "Stat cards visibly refresh with new values immediately after a PATCH to an incident's state, with no manual page reload required"
+      ]
+    },
+    {
+      "name": "Severity-Coded Incident Timeline",
+      "tool": "React component / frontend design tokens",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            "SEV1"
+          ],
+          "name": "SEV1 severity resolves to a valid hex color",
+          "expect": {
+            "matches": "^#[0-9A-Fa-f]{6}$"
+          },
+          "export": "getSeverityColor",
+          "module": "src/components/dashboard/severityColors.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": "b",
+                "created_at": "2026-08-12T10:00:00Z"
+              },
+              {
+                "id": "a",
+                "created_at": "2026-08-10T10:00:00Z"
+              }
+            ]
+          ],
+          "name": "timeline sorts incidents chronologically ascending",
+          "expect": {
+            "equals": [
+              {
+                "id": "a",
+                "created_at": "2026-08-10T10:00:00Z"
+              },
+              {
+                "id": "b",
+                "created_at": "2026-08-12T10:00:00Z"
+              }
+            ]
+          },
+          "export": "buildIncidentTimeline",
+          "module": "src/lib/timeline.js"
+        }
+      ],
+      "capability": "Renders a chronological incident timeline where each entry is color-coded by severity (SEV1 red, SEV2 orange, SEV3 yellow), matching the Figma dark theme spec.",
+      "dependencies": [],
+      "prompt_template": "You are building the incident timeline component for the dark-themed internal dashboard. Sort incidents chronologically and assign each entry the correct severity color token — SEV1 red, SEV2 orange, SEV3 yellow — using the shared design token file, not hardcoded hex values. These colors must not appear anywhere else in the internal UI.",
+      "acceptance_criteria": [
+        "getSeverityColor returns a valid hex/token color for SEV1, SEV2, and SEV3",
+        "buildIncidentTimeline sorts incidents in chronological order by creation timestamp",
+        "Timeline entries render pixel-consistent with the Figma dark theme spec for spacing, typography, and severity color placement"
+      ]
+    },
+    {
+      "name": "Incident State Chips",
+      "tool": "React component / frontend design tokens",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            "investigating"
+          ],
+          "name": "investigating status maps to Investigating label",
+          "expect": {
+            "contains": {
+              "label": "Investigating"
+            }
+          },
+          "export": "getStateChipProps",
+          "module": "src/components/dashboard/stateChips.js"
+        },
+        {
+          "args": [
+            "resolved"
+          ],
+          "name": "resolved status maps to Resolved label",
+          "expect": {
+            "contains": {
+              "label": "Resolved"
+            }
+          },
+          "export": "getStateChipProps",
+          "module": "src/components/dashboard/stateChips.js"
+        }
+      ],
+      "capability": "Renders state chips (open/investigating/identified/resolved) that reflect the incident's current DB state exactly, with no severity coloring reused.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the state chip component that labels each incident's lifecycle state. The chip must read directly from the incident's status field in the DB and map to exactly one of open, investigating, identified, or resolved — never inferring or caching a stale state. Use the dashboard's own chip color tokens, distinct from the SEV1/2/3 severity palette.",
+      "acceptance_criteria": [
+        "getStateChipProps returns the correct label for each of the four defined incident states",
+        "getStateChipProps never reuses a SEV1/SEV2/SEV3 severity color token for chip styling",
+        "Chip updates immediately in the UI after an incident's status is PATCHed, without a page reload"
+      ]
+    },
+    {
+      "name": "Component-Level Incident Filtering",
+      "tool": "Frontend state filter / React component",
+      "priority": "P1",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "componentId": "api"
+              },
+              {
+                "id": 2,
+                "componentId": "web"
+              }
+            ],
+            "api"
+          ],
+          "name": "filters incidents to only the selected component",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "componentId": "api"
+              }
+            ]
+          },
+          "export": "filterIncidentsByComponent",
+          "module": "src/lib/filters.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "componentId": "api"
+              },
+              {
+                "id": 2,
+                "componentId": "web"
+              }
+            ],
+            "all"
+          ],
+          "name": "'all' selector returns full incident list unfiltered",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "componentId": "api"
+              },
+              {
+                "id": 2,
+                "componentId": "web"
+              }
+            ]
+          },
+          "export": "filterIncidentsByComponent",
+          "module": "src/lib/filters.js"
+        }
+      ],
+      "capability": "Filters the incident list and timeline by affected component, since both views share the same underlying timeline component and data source.",
+      "dependencies": [
+        "SKILL_002"
+      ],
+      "prompt_template": "You are adding component-level filtering to the internal dashboard's incident list and timeline. Implement a filter function that narrows incidents by affected component ID and wire it so selecting a component filters both the list and the severity timeline simultaneously, since they render from the same shared incident state.",
+      "acceptance_criteria": [
+        "filterIncidentsByComponent returns only incidents referencing the given component ID",
+        "filterIncidentsByComponent with an 'all' selector returns the full unfiltered incident list",
+        "Selecting a component filter updates both the incident list and the timeline in the same interaction, since they share state"
+      ]
+    },
+    {
+      "name": "Dark Theme Token Integration",
+      "tool": "Frontend design token file / CSS-in-JS theme",
+      "priority": "P1",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [],
+          "name": "dark theme tokens include core surface colors",
+          "expect": {
+            "contains": {
+              "text": "string",
+              "surface": "string",
+              "background": "string"
+            }
+          },
+          "export": "darkTheme",
+          "module": "src/theme/tokens.js"
+        }
+      ],
+      "capability": "Applies the Figma-specified dark theme design tokens (background, surface, text, borders) consistently across stat cards, timeline, and chips.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are wiring the internal dashboard's dark theme design tokens from the Figma spec into the stat cards, timeline, and state chip components. Centralize background, surface, text, and border colors in a single theme token file so no component hardcodes its own dark-mode colors.",
+      "acceptance_criteria": [
+        "The dark theme token file exports background, surface, and text color values used by dashboard components",
+        "Stat cards, timeline, and chips visually match the Figma dark theme spec for color, spacing, and typography"
+      ]
+    },
+    {
+      "name": "Severity Color Usage Audit",
+      "tool": "Node.js audit script / CI lint gate",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [
+            "src/components/dashboard/SeverityTimeline.jsx"
+          ],
+          "name": "timeline component file is allowed to use severity colors",
+          "expect": {
+            "equals": true
+          },
+          "export": "isAllowedFileForSeverityColor",
+          "module": "src/lib/severityAudit.js"
+        },
+        {
+          "args": [
+            "src/components/dashboard/StatCard.jsx"
+          ],
+          "name": "stat card component file is not allowed to use severity colors",
+          "expect": {
+            "equals": false
+          },
+          "export": "isAllowedFileForSeverityColor",
+          "module": "src/lib/severityAudit.js"
+        }
+      ],
+      "capability": "Runs an automated audit confirming SEV1/SEV2/SEV3 colors are used only on timeline entries and state chips-adjacent severity indicators, nowhere else in the internal UI.",
+      "dependencies": [
+        "SKILL_002",
+        "SKILL_003"
+      ],
+      "prompt_template": "You are writing an automated audit that scans the internal dashboard's component source files for usage of the SEV1/SEV2/SEV3 color tokens and fails if any file outside the approved timeline/severity-badge allowlist references them. This enforces the design fidelity requirement that severity colors never leak into stat cards, chips, or other UI elements.",
+      "acceptance_criteria": [
+        "isAllowedFileForSeverityColor returns true only for files on the timeline/severity-badge allowlist",
+        "The audit script exits non-zero when a severity color token is found in a disallowed file",
+        "The audit script exits 0 with zero violations against the current dashboard codebase"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "PLB-4",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T08:08:07.940908Z",
+    "total": 6,
+    "p0_count": 4,
+    "p1_count": 2,
+    "p2_count": 0
+  }
+}
