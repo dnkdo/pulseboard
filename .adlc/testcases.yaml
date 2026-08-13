@@ -1,0 +1,669 @@
+# .adlc/testcases.yaml — DRAFT generated at Skills phase (ADLC Hub — Step 3)
+# Code does not exist yet: module/export are predicted. REVIEW before merge.
+# Each case is tagged with the skill_id/epic_key it belongs to.
+version: 1
+cases:
+  - name: "root package.json declares frontend and backend workspaces"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-27"
+    module: "package.json"
+    export: "workspaces"
+    args: []
+    expect: { contains: ["frontend", "backend"] }
+  - name: "frontend package.json declares react and vite dependencies"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-27"
+    module: "frontend/package.json"
+    export: "dependencies"
+    args: []
+    expect: { contains: { react: "string", vite: "string" } }
+  - name: "frontend package.json declares tailwind devDependency"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-27"
+    module: "frontend/package.json"
+    export: "devDependencies"
+    args: []
+    expect: { contains: { tailwindcss: "string" } }
+  - name: "backend package.json declares express dependency"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-27"
+    module: "backend/package.json"
+    export: "dependencies"
+    args: []
+    expect: { contains: { express: "string" } }
+  - name: "frontend package.json declares a test script"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "ADLCPROJ-27"
+    module: "frontend/package.json"
+    export: "scripts"
+    args: []
+    expect: { contains: { test: "string" } }
+  - name: "backend package.json declares a test script"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "ADLCPROJ-27"
+    module: "backend/package.json"
+    export: "scripts"
+    args: []
+    expect: { contains: { test: "string" } }
+  - name: ".adlc.json test_command references the test runner"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-27"
+    module: ".adlc.json"
+    export: "test_command"
+    args: []
+    expect: { contains: "test" }
+  - name: ".adlc.json tech_stack lists react and express"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-27"
+    module: ".adlc.json"
+    export: "tech_stack"
+    args: []
+    expect: { contains: ["react", "express"] }
+  - name: ".adlc.json required_services is empty"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-27"
+    module: ".adlc.json"
+    export: "required_services"
+    args: []
+    expect: { equals: [] }
+  - name: "frontend package.json declares a lint script"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-27"
+    module: "frontend/package.json"
+    export: "scripts"
+    args: []
+    expect: { contains: { lint: "string" } }
+  - name: "backend package.json declares a lint script"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-27"
+    module: "backend/package.json"
+    export: "scripts"
+    args: []
+    expect: { contains: { lint: "string" } }
+  - name: "severity enum contains all three severities"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/db/schema.js"
+    export: "SEVERITIES"
+    args: []
+    expect: { contains: ["SEV1", "SEV2", "SEV3"] }
+  - name: "incident status enum contains all four workflow states"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/db/schema.js"
+    export: "INCIDENT_STATUSES"
+    args: []
+    expect: { contains: ["open", "investigating", "identified", "resolved"] }
+  - name: "seed data covers all three severities"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/db/seedData.js"
+    export: "getSeedSeverities"
+    args: []
+    expect: { equals: ["SEV1", "SEV2", "SEV3"] }
+  - name: "seed data covers all four incident states"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/db/seedData.js"
+    export: "getSeedIncidentStatuses"
+    args: []
+    expect: { contains: ["open", "investigating", "identified", "resolved"] }
+  - name: "seed data has at least one active incident"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/db/seedData.js"
+    export: "getActiveIncidentCount"
+    args: []
+    expect: { gte: 1 }
+  - name: "adjacent forward transition is valid"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/domain/incidentStateMachine.js"
+    export: "isValidTransition"
+    args: ["open", "investigating"]
+    expect: { equals: true }
+  - name: "backward transition is invalid"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/domain/incidentStateMachine.js"
+    export: "isValidTransition"
+    args: ["resolved", "open"]
+    expect: { equals: false }
+  - name: "skipping intermediate states is invalid"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-28"
+    module: "server/src/domain/incidentStateMachine.js"
+    export: "isValidTransition"
+    args: ["open", "resolved"]
+    expect: { equals: false }
+  - name: "no active incidents returns operational"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/status.js"
+    export: "getOverallStatus"
+    args: [[]]
+    expect: { equals: "operational" }
+  - name: "highest severity among active incidents wins"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/status.js"
+    export: "getOverallStatus"
+    args: [[{ severity: "sev3", status: "open" }, { severity: "sev1", status: "investigating" }]]
+    expect: { equals: "sev1" }
+  - name: "formats uptime ratio to percentage string"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/components.js"
+    export: "formatUptime"
+    args: [0.9995]
+    expect: { equals: "99.95%" }
+  - name: "filters out resolved incidents"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/incidents.js"
+    export: "getActiveIncidents"
+    args: [[{ id: 1, status: "resolved" }, { id: 2, status: "investigating" }]]
+    expect: { equals: [{ id: 2, status: "investigating" }] }
+  - name: "returns resolved incidents sorted most-recent-first"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/incidents.js"
+    export: "getPastIncidents"
+    args: [[{ id: 1, status: "resolved", resolvedAt: "2026-01-01" }, { id: 2, status: "resolved", resolvedAt: "2026-03-01" }, { id: 3, status: "investigating", resolvedAt: null }]]
+    expect: { equals: [{ id: 2, status: "resolved", resolvedAt: "2026-03-01" }, { id: 1, status: "resolved", resolvedAt: "2026-01-01" }] }
+  - name: "assembles combined status page data model"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/statusPageData.js"
+    export: "assembleStatusPageData"
+    args: [[{ id: "c1", name: "API", uptime: 0.999, status: "operational" }], [{ id: 2, status: "investigating", severity: "sev2", resolvedAt: null }]]
+    expect: { contains: { overallStatus: "string" } }
+  - name: "severity color is a valid hex string"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/colors.js"
+    export: "getSeverityColor"
+    args: ["sev1"]
+    expect: { matches: "^#[0-9A-Fa-f]{6}$" }
+  - name: "component status color is a valid hex string"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-29"
+    module: "src/lib/colors.js"
+    export: "getComponentStatusColor"
+    args: ["degraded"]
+    expect: { matches: "^#[0-9A-Fa-f]{6}$" }
+  - name: "counts non-resolved incidents as open"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/metrics.js"
+    export: "computeOpenIncidentsCount"
+    args: [[{ id: 1, state: "open" }, { id: 2, state: "investigating" }, { id: 3, state: "resolved" }]]
+    expect: { equals: 2 }
+  - name: "computes average MTTR in minutes for incidents resolved within 7 days"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/metrics.js"
+    export: "compute7DayMTTR"
+    args: [[{ id: 1, created_at: "2026-08-10T00:00:00Z", resolved_at: "2026-08-10T01:00:00Z", state: "resolved" }, { id: 2, created_at: "2026-08-11T00:00:00Z", resolved_at: "2026-08-11T02:00:00Z", state: "resolved" }], "2026-08-13T00:00:00Z"]
+    expect: { equals: 90 }
+  - name: "counts incidents created in current calendar month"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/metrics.js"
+    export: "computeIncidentsThisMonth"
+    args: [[{ id: 1, created_at: "2026-08-01T00:00:00Z" }, { id: 2, created_at: "2026-07-31T00:00:00Z" }], "2026-08-13T00:00:00Z"]
+    expect: { equals: 1 }
+  - name: "uptime percent is within 0-100 bounds"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/metrics.js"
+    export: "computeUptimePercent"
+    args: [[{ component_id: 1, uptime_minutes: 43000, total_minutes: 43200 }]]
+    expect: { gte: 0 }
+  - name: "SEV1 maps to red"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/severity.js"
+    export: "severityColor"
+    args: ["SEV1"]
+    expect: { equals: "#FF3B30" }
+  - name: "SEV2 maps to orange"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/severity.js"
+    export: "severityColor"
+    args: ["SEV2"]
+    expect: { equals: "#FF9500" }
+  - name: "SEV3 maps to yellow"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/severity.js"
+    export: "severityColor"
+    args: ["SEV3"]
+    expect: { equals: "#FFCC00" }
+  - name: "open state maps to correct chip config"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/state.js"
+    export: "stateChipConfig"
+    args: ["open"]
+    expect: { contains: { label: "string", color: "string" } }
+  - name: "resolved state maps to correct chip config"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/state.js"
+    export: "stateChipConfig"
+    args: ["resolved"]
+    expect: { contains: { label: "string", color: "string" } }
+  - name: "unknown state throws rather than silently defaulting"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-30"
+    module: "src/lib/state.js"
+    export: "stateChipConfig"
+    args: ["bogus_state"]
+    expect: { throws: true }
+  - name: "flags all missing required fields"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-31"
+    module: "client/src/validators/incidentFormValidator.js"
+    export: "validateDeclareIncidentForm"
+    args: [{ title: "", severity: "", components: [], summary: "" }]
+    expect: { contains: { title: "string", severity: "string", components: "string", summary: "string" } }
+  - name: "passes with all fields populated"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-31"
+    module: "client/src/validators/incidentFormValidator.js"
+    export: "validateDeclareIncidentForm"
+    args: [{ title: "API latency spike", severity: "SEV1", components: ["api"], summary: "Elevated p99 latency on API gateway" }]
+    expect: { equals: {  } }
+  - name: "forces new incidents into open state"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/incidentService.js"
+    export: "createIncident"
+    args: [{ title: "Checkout errors", severity: "SEV2", components: ["checkout"], summary: "Elevated 500s on checkout", state: "resolved" }]
+    expect: { contains: { state: "open" } }
+  - name: "allows the next sequential state"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/incidentStateMachine.js"
+    export: "isValidTransition"
+    args: ["open", "investigating"]
+    expect: { equals: true }
+  - name: "rejects skipping a state"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/incidentStateMachine.js"
+    export: "isValidTransition"
+    args: ["open", "resolved"]
+    expect: { equals: false }
+  - name: "rejects reopening a resolved incident"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/incidentStateMachine.js"
+    export: "isValidTransition"
+    args: ["resolved", "investigating"]
+    expect: { equals: false }
+  - name: "returns the next state for an open incident"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-31"
+    module: "client/src/utils/stateTransitionHelpers.js"
+    export: "getAvailableAction"
+    args: ["open"]
+    expect: { equals: "investigating" }
+  - name: "returns null once resolved"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-31"
+    module: "client/src/utils/stateTransitionHelpers.js"
+    export: "getAvailableAction"
+    args: ["resolved"]
+    expect: { equals: null }
+  - name: "reports operational with no active incidents"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/statusPageService.js"
+    export: "computeBannerStatus"
+    args: [[]]
+    expect: { equals: "operational" }
+  - name: "reports the highest severity among active incidents"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/statusPageService.js"
+    export: "computeBannerStatus"
+    args: [[{ id: 1, severity: "SEV2" }, { id: 2, severity: "SEV1" }]]
+    expect: { equals: "SEV1" }
+  - name: "excludes resolved incidents from active list"
+    kind: "testcase"
+    skill_id: "SKILL_007"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/incidentQueries.js"
+    export: "getActiveIncidents"
+    args: [[{ id: 1, state: "open" }, { id: 2, state: "resolved" }]]
+    expect: { equals: [{ id: 1, state: "open" }] }
+  - name: "includes only resolved incidents in past list"
+    kind: "testcase"
+    skill_id: "SKILL_007"
+    epic_key: "ADLCPROJ-31"
+    module: "server/services/incidentQueries.js"
+    export: "getPastIncidents"
+    args: [[{ id: 1, state: "open" }, { id: 2, state: "resolved" }]]
+    expect: { equals: [{ id: 2, state: "resolved" }] }
+  - name: "sorts transitions chronologically ascending"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-32"
+    module: "src/utils/transitions.js"
+    export: "sortTransitionsByTimestamp"
+    args: [[{ status: "identified", timestamp: "2026-08-13T09:00:00.000Z" }, { status: "open", timestamp: "2026-08-13T08:00:00.000Z" }, { status: "resolved", timestamp: "2026-08-13T10:00:00.000Z" }]]
+    expect: { equals: [{ status: "open", timestamp: "2026-08-13T08:00:00.000Z" }, { status: "identified", timestamp: "2026-08-13T09:00:00.000Z" }, { status: "resolved", timestamp: "2026-08-13T10:00:00.000Z" }] }
+  - name: "formats ISO timestamp into a readable label"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-32"
+    module: "src/utils/formatters.js"
+    export: "formatTransitionTimestamp"
+    args: ["2026-08-13T08:00:00.000Z"]
+    expect: { contains: "2026" }
+  - name: "builds internal incident detail path from an id"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "ADLCPROJ-32"
+    module: "src/utils/routes.js"
+    export: "buildIncidentDetailPath"
+    args: ["inc_123"]
+    expect: { equals: "/incidents/inc_123" }
+  - name: "strips internal-only fields from incident before public render"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-32"
+    module: "src/utils/publicView.js"
+    export: "toPublicIncidentView"
+    args: [{ id: "inc_1", title: "API Latency", status: "investigating", severity: "sev2", assignee: "dana", internalNotes: "root cause tbd" }]
+    expect: { equals: { id: "inc_1", title: "API Latency", status: "investigating", severity: "sev2" } }
+  - name: "builds public incident detail path from an id"
+    kind: "testcase"
+    skill_id: "SKILL_007"
+    epic_key: "ADLCPROJ-32"
+    module: "src/utils/routes.js"
+    export: "buildPublicIncidentPath"
+    args: ["inc_123"]
+    expect: { equals: "/status/incidents/inc_123" }
+  - name: "filters incidents by matching component"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "filterByComponent"
+    args: [[{ id: 1, component: "API" }, { id: 2, component: "Database" }], "API"]
+    expect: { equals: [{ id: 1, component: "API" }] }
+  - name: "returns full list when component filter is 'all'"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "filterByComponent"
+    args: [[{ id: 1, component: "API" }, { id: 2, component: "Database" }], "all"]
+    expect: { equals: [{ id: 1, component: "API" }, { id: 2, component: "Database" }] }
+  - name: "derives deduplicated, sorted component list"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "getUniqueComponents"
+    args: [[{ component: "API" }, { component: "Database" }, { component: "API" }]]
+    expect: { equals: ["API", "Database"] }
+  - name: "filters incidents by matching severity"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "filterBySeverity"
+    args: [[{ id: 1, severity: "SEV1" }, { id: 2, severity: "SEV3" }], "SEV1"]
+    expect: { equals: [{ id: 1, severity: "SEV1" }] }
+  - name: "returns full list when severity filter is 'all'"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "filterBySeverity"
+    args: [[{ id: 1, severity: "SEV1" }, { id: 2, severity: "SEV3" }], "all"]
+    expect: { equals: [{ id: 1, severity: "SEV1" }, { id: 2, severity: "SEV3" }] }
+  - name: "filters incidents within inclusive date range"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "filterByDateRange"
+    args: [[{ id: 1, createdAt: "2026-08-01T00:00:00Z" }, { id: 2, createdAt: "2026-08-10T00:00:00Z" }], "2026-08-05T00:00:00Z", "2026-08-15T00:00:00Z"]
+    expect: { equals: [{ id: 2, createdAt: "2026-08-10T00:00:00Z" }] }
+  - name: "returns full list when no date range is set"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "filterByDateRange"
+    args: [[{ id: 1, createdAt: "2026-08-01T00:00:00Z" }, { id: 2, createdAt: "2026-08-10T00:00:00Z" }], null, null]
+    expect: { equals: [{ id: 1, createdAt: "2026-08-01T00:00:00Z" }, { id: 2, createdAt: "2026-08-10T00:00:00Z" }] }
+  - name: "applies component and severity filters together"
+    kind: "testcase"
+    skill_id: "SKILL_007"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "applyFilters"
+    args: [[{ id: 1, component: "API", severity: "SEV1" }, { id: 2, component: "API", severity: "SEV3" }, { id: 3, component: "Database", severity: "SEV1" }], { component: "API", severity: "SEV1", startDate: null, endDate: null }]
+    expect: { equals: [{ id: 1, component: "API", severity: "SEV1" }] }
+  - name: "clearFilters default state returns full list when applied"
+    kind: "testcase"
+    skill_id: "SKILL_007"
+    epic_key: "ADLCPROJ-33"
+    module: "src/utils/incidentFilters.js"
+    export: "clearFilters"
+    args: []
+    expect: { equals: { component: "all", severity: "all", startDate: null, endDate: null } }
+  - name: "resolved incident yields start/end matching createdAt/resolvedAt"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-34"
+    module: "src/services/uptime.js"
+    export: "extractDowntimeInterval"
+    args: [{ createdAt: "2026-01-05T10:00:00Z", resolvedAt: "2026-01-05T12:00:00Z", status: "resolved" }]
+    expect: { equals: { start: "2026-01-05T10:00:00Z", end: "2026-01-05T12:00:00Z" } }
+  - name: "interval starting before period start is clipped to period start"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-34"
+    module: "src/services/uptime.js"
+    export: "clipIntervalToPeriod"
+    args: [{ start: "2025-12-31T23:00:00Z", end: "2026-01-01T02:00:00Z" }, "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"]
+    expect: { contains: { durationMs: 7200000 } }
+  - name: "no incidents yields 100% uptime"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "ADLCPROJ-34"
+    module: "src/services/uptime.js"
+    export: "calculateComponentUptime"
+    args: [[], "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"]
+    expect: { equals: 100 }
+  - name: "one 2-hour incident over a 720-hour period yields 99.72%"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "ADLCPROJ-34"
+    module: "src/services/uptime.js"
+    export: "calculateComponentUptime"
+    args: [[{ createdAt: "2026-01-05T10:00:00Z", resolvedAt: "2026-01-05T12:00:00Z", status: "resolved" }], "2026-01-01T00:00:00Z", "2026-01-31T00:00:00Z"]
+    expect: { equals: 99.72 }
+  - name: "overlapping incidents across components merge to 3 hours downtime over 24h -> 87.5%"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "ADLCPROJ-34"
+    module: "src/services/uptime.js"
+    export: "calculateOverallUptime"
+    args: [[{ componentId: "api", createdAt: "2026-01-01T00:00:00Z", resolvedAt: "2026-01-01T02:00:00Z", status: "resolved" }, { componentId: "web", createdAt: "2026-01-01T01:00:00Z", resolvedAt: "2026-01-01T03:00:00Z", status: "resolved" }], "2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z"]
+    expect: { equals: 87.5 }
+  - name: "rounds a raw uptime value to 2 decimals with percent sign"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-34"
+    module: "src/services/uptime.js"
+    export: "formatUptimePercentage"
+    args: [99.7222]
+    expect: { equals: "99.72%" }
+  - name: "formats exact 100 as 100.00%"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "ADLCPROJ-34"
+    module: "src/services/uptime.js"
+    export: "formatUptimePercentage"
+    args: [100]
+    expect: { equals: "100.00%" }
+  - name: "groups components by their category field"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/groupComponentsByCategory.js"
+    export: "groupComponentsByCategory"
+    args: [[{ id: 1, name: "DB", category: "Infrastructure" }, { id: 2, name: "API GW", category: "API" }]]
+    expect: { equals: [{ category: "Infrastructure", components: [{ id: 1, name: "DB", category: "Infrastructure" }] }, { category: "API", components: [{ id: 2, name: "API GW", category: "API" }] }] }
+  - name: "components missing a category fall into 'Other'"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/groupComponentsByCategory.js"
+    export: "groupComponentsByCategory"
+    args: [[{ id: 1, name: "Legacy Service" }]]
+    expect: { equals: [{ category: "Other", components: [{ id: 1, name: "Legacy Service" }] }] }
+  - name: "empty component list returns empty group array"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/groupComponentsByCategory.js"
+    export: "groupComponentsByCategory"
+    args: [[]]
+    expect: { equals: [] }
+  - name: "sorts canonical categories per CATEGORY_ORDER"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/categoryOrder.js"
+    export: "sortCategoryGroups"
+    args: [[{ category: "Infrastructure", components: [] }, { category: "API", components: [] }, { category: "Web", components: [] }]]
+    expect: { equals: [{ category: "API", components: [] }, { category: "Web", components: [] }, { category: "Infrastructure", components: [] }] }
+  - name: "unknown categories sorted alphabetically before 'Other'"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/categoryOrder.js"
+    export: "sortCategoryGroups"
+    args: [[{ category: "Security", components: [] }, { category: "Other", components: [] }, { category: "API", components: [] }]]
+    expect: { equals: [{ category: "API", components: [] }, { category: "Security", components: [] }, { category: "Other", components: [] }] }
+  - name: "empty string defaults to Other"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/formatCategoryLabel.js"
+    export: "formatCategoryLabel"
+    args: [""]
+    expect: { equals: "Other" }
+  - name: "undefined defaults to Other"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/formatCategoryLabel.js"
+    export: "formatCategoryLabel"
+    args: [null]
+    expect: { equals: "Other" }
+  - name: "valid category passes through unchanged"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-35"
+    module: "src/utils/formatCategoryLabel.js"
+    export: "formatCategoryLabel"
+    args: ["API"]
+    expect: { equals: "API" }
+  - name: "returns header-only row for empty incident array"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-36"
+    module: "src/utils/exportIncidents.js"
+    export: "toCSV"
+    args: [[]]
+    expect: { equals: "id,title,severity,state,createdAt,resolvedAt,mttrMinutes" }
+  - name: "escapes commas and quotes in title field"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "ADLCPROJ-36"
+    module: "src/utils/exportIncidents.js"
+    export: "toCSV"
+    args: [[{ id: 1, title: "Payment, gateway \"down\"", severity: "sev1", state: "open", createdAt: "2026-08-01T00:00:00Z", resolvedAt: "", mttrMinutes: "" }]]
+    expect: { contains: "\"Payment, gateway \"\"down\"\"\"" }
+  - name: "serializes single incident to pretty JSON"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "ADLCPROJ-36"
+    module: "src/utils/exportIncidents.js"
+    export: "toJSON"
+    args: [[{ id: 1, title: "API outage" }]]
+    expect: { equals: "[\n  {\n    \"id\": 1,\n    \"title\": \"API outage\"\n  }\n]" }
+  - name: "maps open incident with null resolution fields"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "ADLCPROJ-36"
+    module: "src/utils/exportIncidents.js"
+    export: "mapIncidentToExportRow"
+    args: [{ id: 1, title: "API down", severity: "sev1", state: "investigating", createdAt: "2026-08-01T10:00:00Z", resolvedAt: null, mttrMinutes: null }]
+    expect: { contains: { id: "number", title: "string", severity: "string", state: "string" } }
+  - name: "filters incidents by severity"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "ADLCPROJ-36"
+    module: "src/utils/exportIncidents.js"
+    export: "filterIncidentsForExport"
+    args: [[{ id: 1, severity: "sev1" }, { id: 2, severity: "sev2" }], { severity: "sev1" }]
+    expect: { equals: [{ id: 1, severity: "sev1" }] }
