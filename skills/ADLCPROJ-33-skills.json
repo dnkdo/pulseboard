@@ -1,0 +1,376 @@
+{
+  "skills": [
+    {
+      "name": "Component Filter Logic",
+      "tool": "Client-side filter utility (JavaScript, operates on incidents array from GET /api/incidents)",
+      "priority": "P1",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "component": "API"
+              },
+              {
+                "id": 2,
+                "component": "Database"
+              }
+            ],
+            "API"
+          ],
+          "name": "filters incidents by matching component",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "component": "API"
+              }
+            ]
+          },
+          "export": "filterByComponent",
+          "module": "src/utils/incidentFilters.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "component": "API"
+              },
+              {
+                "id": 2,
+                "component": "Database"
+              }
+            ],
+            "all"
+          ],
+          "name": "returns full list when component filter is 'all'",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "component": "API"
+              },
+              {
+                "id": 2,
+                "component": "Database"
+              }
+            ]
+          },
+          "export": "filterByComponent",
+          "module": "src/utils/incidentFilters.js"
+        }
+      ],
+      "capability": "Implement a pure function that filters the incident list to only those affecting a selected component, returning the full unfiltered list when no component (or 'all') is selected.",
+      "dependencies": [],
+      "prompt_template": "You are implementing the component-filtering logic for the incident dashboard timeline/list. Write a pure, side-effect-free function that takes the full incidents array and a component value, and returns only incidents whose `component` field matches; when the value is 'all' or falsy, return the full list unchanged so clearing the filter restores everything. Do not mutate the input array.",
+      "acceptance_criteria": [
+        "filterByComponent(incidents, 'API') returns only incidents where component === 'API'",
+        "filterByComponent(incidents, 'all') returns the full, unfiltered incident list"
+      ]
+    },
+    {
+      "name": "Component Filter Dropdown UI",
+      "tool": "React component (select/dropdown) bound to incident list state",
+      "priority": "P1",
+      "skill_id": "SKILL_002",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "component": "API"
+              },
+              {
+                "component": "Database"
+              },
+              {
+                "component": "API"
+              }
+            ]
+          ],
+          "name": "derives deduplicated, sorted component list",
+          "expect": {
+            "equals": [
+              "API",
+              "Database"
+            ]
+          },
+          "export": "getUniqueComponents",
+          "module": "src/utils/incidentFilters.js"
+        }
+      ],
+      "capability": "Build a dropdown/select control populated with the unique set of affected components from the incident data, wired to SKILL_001's filter function, with a default 'All Components' option that clears the filter.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are building the component-filter dropdown that sits above the incident timeline/list. Derive the list of selectable components from the unique `component` values present in the incidents array (deduplicated, sorted), include an 'All Components' option first, and on selection call the existing filterByComponent utility to update the visible list; selecting 'All Components' must restore the full incident list exactly as it was before any filter was applied.",
+      "acceptance_criteria": [
+        "getUniqueComponents(incidents) returns a deduplicated, sorted array of component names present in the data",
+        "Selecting a component in the dropdown updates the rendered incident list to only that component's incidents",
+        "Selecting 'All Components' (or clearing the filter) restores the full incident list with no residual filtering"
+      ]
+    },
+    {
+      "name": "Severity Filter Logic",
+      "tool": "Client-side filter utility (JavaScript, operates on incidents array from GET /api/incidents)",
+      "priority": "P2",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "SEV1"
+              },
+              {
+                "id": 2,
+                "severity": "SEV3"
+              }
+            ],
+            "SEV1"
+          ],
+          "name": "filters incidents by matching severity",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "severity": "SEV1"
+              }
+            ]
+          },
+          "export": "filterBySeverity",
+          "module": "src/utils/incidentFilters.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "SEV1"
+              },
+              {
+                "id": 2,
+                "severity": "SEV3"
+              }
+            ],
+            "all"
+          ],
+          "name": "returns full list when severity filter is 'all'",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "severity": "SEV1"
+              },
+              {
+                "id": 2,
+                "severity": "SEV3"
+              }
+            ]
+          },
+          "export": "filterBySeverity",
+          "module": "src/utils/incidentFilters.js"
+        }
+      ],
+      "capability": "Implement a pure function that filters the incident list by severity level (SEV1/SEV2/SEV3), returning the full list when severity is unset or 'all'.",
+      "dependencies": [],
+      "prompt_template": "You are implementing severity-based filtering for the incident dashboard timeline/list. Write a pure function that takes the incidents array and a severity value (e.g. 'SEV1', 'SEV2', 'SEV3', or 'all'), and returns only incidents whose `severity` field matches; when severity is 'all' or falsy, return the full unfiltered list. Do not mutate the input array or introduce severity color logic here — that belongs to the existing State Chips component.",
+      "acceptance_criteria": [
+        "filterBySeverity(incidents, 'SEV1') returns only incidents where severity === 'SEV1'",
+        "filterBySeverity(incidents, 'all') returns the full, unfiltered incident list"
+      ]
+    },
+    {
+      "name": "Severity Filter Control UI",
+      "tool": "React component (toggle/chip group) bound to incident list state, reusing State Chips styling tokens",
+      "priority": "P2",
+      "skill_id": "SKILL_004",
+      "testcases": [],
+      "capability": "Build a severity filter control (button group or chip toggles reusing the existing State Chips design tokens) that applies SKILL_003's filter function and supports clearing back to all severities.",
+      "dependencies": [
+        "SKILL_003"
+      ],
+      "prompt_template": "You are building the severity filter control above the incident timeline/list. Reuse the existing State Chips component's severity color tokens (SEV1/SEV2/SEV3) so filter chips visually match the chips already shown on incidents, and never introduce new colors for this control. Wire selection/deselection to the filterBySeverity utility, and ensure deselecting all severities (or an explicit 'All' toggle) restores the full incident list.",
+      "acceptance_criteria": [
+        "Selecting a severity chip updates the rendered incident list to only that severity's incidents",
+        "Clearing the severity filter restores the full incident list",
+        "Severity filter chips use only the existing State Chips color tokens, with zero new colors introduced"
+      ]
+    },
+    {
+      "name": "Date Range Filter Logic",
+      "tool": "Client-side filter utility (JavaScript, operates on incidents array from GET /api/incidents)",
+      "priority": "P2",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "createdAt": "2026-08-01T00:00:00Z"
+              },
+              {
+                "id": 2,
+                "createdAt": "2026-08-10T00:00:00Z"
+              }
+            ],
+            "2026-08-05T00:00:00Z",
+            "2026-08-15T00:00:00Z"
+          ],
+          "name": "filters incidents within inclusive date range",
+          "expect": {
+            "equals": [
+              {
+                "id": 2,
+                "createdAt": "2026-08-10T00:00:00Z"
+              }
+            ]
+          },
+          "export": "filterByDateRange",
+          "module": "src/utils/incidentFilters.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "createdAt": "2026-08-01T00:00:00Z"
+              },
+              {
+                "id": 2,
+                "createdAt": "2026-08-10T00:00:00Z"
+              }
+            ],
+            null,
+            null
+          ],
+          "name": "returns full list when no date range is set",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "createdAt": "2026-08-01T00:00:00Z"
+              },
+              {
+                "id": 2,
+                "createdAt": "2026-08-10T00:00:00Z"
+              }
+            ]
+          },
+          "export": "filterByDateRange",
+          "module": "src/utils/incidentFilters.js"
+        }
+      ],
+      "capability": "Implement a pure function that filters the incident list to those whose timestamp falls within an inclusive start/end date range, returning the full list when no range is set.",
+      "dependencies": [],
+      "prompt_template": "You are implementing date-range filtering for the incident dashboard timeline/list. Write a pure function that takes the incidents array plus a startDate and endDate (ISO strings or null), and returns only incidents whose `createdAt` timestamp falls within the inclusive range; when both startDate and endDate are null/undefined, return the full unfiltered list. Handle partial ranges (only startDate or only endDate provided).",
+      "acceptance_criteria": [
+        "filterByDateRange(incidents, startDate, endDate) returns only incidents with createdAt within the inclusive [startDate, endDate] range",
+        "filterByDateRange(incidents, null, null) returns the full, unfiltered incident list"
+      ]
+    },
+    {
+      "name": "Date Range Picker UI",
+      "tool": "React component (date range picker) bound to incident list state",
+      "priority": "P2",
+      "skill_id": "SKILL_006",
+      "testcases": [],
+      "capability": "Build a date range picker control above the incident timeline/list that applies SKILL_005's filter function and supports clearing the range to restore the full list.",
+      "dependencies": [
+        "SKILL_005"
+      ],
+      "prompt_template": "You are building the date range picker for the incident dashboard timeline/list. Provide start and end date inputs, wire changes to the filterByDateRange utility to update the visible incidents, and include a 'Clear' action that resets both dates to null so the full incident list is restored. Validate that startDate is not after endDate before applying the filter.",
+      "acceptance_criteria": [
+        "Selecting a start and end date updates the rendered incident list to only incidents within that range",
+        "Clearing the date range restores the full incident list",
+        "An invalid range (startDate after endDate) does not apply a broken filter"
+      ]
+    },
+    {
+      "name": "Combined Filter State & Clear All",
+      "tool": "Client-side filter utility (JavaScript, composes filterByComponent/filterBySeverity/filterByDateRange)",
+      "priority": "P2",
+      "skill_id": "SKILL_007",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "id": 1,
+                "severity": "SEV1",
+                "component": "API"
+              },
+              {
+                "id": 2,
+                "severity": "SEV3",
+                "component": "API"
+              },
+              {
+                "id": 3,
+                "severity": "SEV1",
+                "component": "Database"
+              }
+            ],
+            {
+              "endDate": null,
+              "severity": "SEV1",
+              "component": "API",
+              "startDate": null
+            }
+          ],
+          "name": "applies component and severity filters together",
+          "expect": {
+            "equals": [
+              {
+                "id": 1,
+                "severity": "SEV1",
+                "component": "API"
+              }
+            ]
+          },
+          "export": "applyFilters",
+          "module": "src/utils/incidentFilters.js"
+        },
+        {
+          "args": [],
+          "name": "clearFilters default state returns full list when applied",
+          "expect": {
+            "equals": {
+              "endDate": null,
+              "severity": "all",
+              "component": "all",
+              "startDate": null
+            }
+          },
+          "export": "clearFilters",
+          "module": "src/utils/incidentFilters.js"
+        }
+      ],
+      "capability": "Implement a combined filter function that applies component, severity, and date-range filters together (AND logic) against the incident list, plus a reset helper that restores the full list when all filters are cleared.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_003",
+        "SKILL_005"
+      ],
+      "prompt_template": "You are implementing the combined filter state for the incident dashboard timeline/list, which lets component, severity, and date-range filters be applied simultaneously. Write applyFilters(incidents, filters) that composes filterByComponent, filterBySeverity, and filterByDateRange with AND semantics, and a clearFilters() helper returning the default filter state ({component: 'all', severity: 'all', startDate: null, endDate: null}) such that applying it returns the full incident list unchanged.",
+      "acceptance_criteria": [
+        "applyFilters(incidents, {component, severity, startDate, endDate}) returns only incidents matching all active filter criteria simultaneously",
+        "applyFilters(incidents, clearFilters()) returns the full, unfiltered incident list"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "ADLCPROJ-33",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T07:20:57.135916Z",
+    "total": 7,
+    "p0_count": 0,
+    "p1_count": 2,
+    "p2_count": 5
+  }
+}
