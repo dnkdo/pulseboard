@@ -1,0 +1,277 @@
+{
+  "skills": [
+    {
+      "name": "Incident and Component Data Model",
+      "tool": "SQLite (better-sqlite3) or JSON seed store",
+      "priority": "P0",
+      "skill_id": "SKILL_001",
+      "testcases": [
+        {
+          "args": [],
+          "name": "severity enum has exactly 3 documented severities",
+          "expect": {
+            "equals": [
+              "SEV1",
+              "SEV2",
+              "SEV3"
+            ]
+          },
+          "export": "SEVERITIES",
+          "module": "src/models/schema.js"
+        },
+        {
+          "args": [],
+          "name": "incident state enum has exactly 4 documented states in order",
+          "expect": {
+            "equals": [
+              "open",
+              "investigating",
+              "identified",
+              "resolved"
+            ]
+          },
+          "export": "INCIDENT_STATES",
+          "module": "src/models/schema.js"
+        }
+      ],
+      "capability": "Defines the shared schema (SQLite tables or JSON seed-store shape) for Incidents, Components, and state-transition history that all downstream endpoints and features consume.",
+      "dependencies": [],
+      "prompt_template": "You are a backend data-modeling agent. Define the canonical Incident schema (id, title, severity, affectedComponents, summary, state, stateHistory[]) and Component schema (id, name, healthState, uptimePercent) as either SQLite table migrations or a typed JSON store shape. Export shared enum constants for severities and incident states so every other module references the same source of truth. Do not implement business logic or endpoints here — this skill only produces the schema/migration and constant exports.",
+      "acceptance_criteria": [
+        "Schema module exports the exact set of 3 severities (SEV1, SEV2, SEV3)",
+        "Schema module exports the exact set of 4 incident states (open, investigating, identified, resolved) in workflow order",
+        "Database/store initializes required tables or collections automatically on process startup with no manual migration step"
+      ]
+    },
+    {
+      "name": "Deterministic Seed Data Loader",
+      "tool": "SQLite (better-sqlite3) or JSON seed store",
+      "priority": "P0",
+      "skill_id": "SKILL_002",
+      "testcases": [],
+      "capability": "Builds a fixed, deterministic seed dataset of incidents and components covering all 4 states and all 3 severities, auto-loaded on fresh install.",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are a backend seeding agent. Using the schema from SKILL_001, author a deterministic fixture dataset (no random IDs, no Date.now()) of multiple components and incidents that together cover all 4 incident states and all 3 severities. Wire it to load automatically the first time the app boots against an empty database/store, with no CLI command or manual step required. Keep timestamps as fixed ISO strings so tests relying on this data are reproducible.",
+      "acceptance_criteria": [
+        "Seed dataset contains at least one incident in each of the 4 defined states",
+        "Seed dataset contains at least one incident of each of the 3 defined severities across multiple components",
+        "Seeding executes automatically on a fresh install/empty database with zero manual setup steps"
+      ]
+    },
+    {
+      "name": "Deterministic Uptime Calculation Engine",
+      "tool": "Node.js / Vitest",
+      "priority": "P0",
+      "skill_id": "SKILL_003",
+      "testcases": [
+        {
+          "args": [
+            10000,
+            1000000
+          ],
+          "name": "uptime percent for fixed downtime and period",
+          "expect": {
+            "equals": 99
+          },
+          "export": "calculateUptime",
+          "module": "src/services/uptime.js"
+        }
+      ],
+      "capability": "Implements a pure, injectable-timestamp function computing uptime % as (time-in-non-operational-state / total period), with no reliance on Date.now().",
+      "dependencies": [
+        "SKILL_001"
+      ],
+      "prompt_template": "You are a backend algorithms agent. Implement calculateUptime as a pure function that takes downtime duration and total period duration (or explicit start/end boundaries) as arguments and returns an uptime percentage, never calling Date.now() internally so it stays deterministic under test. Write vitest unit tests asserting exact expected percentages against the fixed seed dataset from SKILL_002. Round consistently (e.g., 2 decimal places) and document the formula inline where the rounding choice is non-obvious.",
+      "acceptance_criteria": [
+        "calculateUptime(downtimeMs, totalPeriodMs) returns the exact expected percentage for fixed numeric inputs",
+        "Function signature accepts explicit/injectable timestamps and performs no internal Date.now() or new Date() calls",
+        "Unit test suite asserts exact expected uptime percentages against the fixed seed dataset for every seeded component"
+      ]
+    },
+    {
+      "name": "Incidents REST API Endpoints",
+      "tool": "Express REST API",
+      "priority": "P0",
+      "skill_id": "SKILL_004",
+      "testcases": [
+        {
+          "args": [
+            {
+              "id": "inc-1",
+              "state": "investigating",
+              "title": "API latency spike",
+              "summary": "Elevated latency on core API",
+              "severity": "SEV2",
+              "stateHistory": [
+                {
+                  "state": "open",
+                  "timestamp": "2026-08-01T00:00:00.000Z"
+                },
+                {
+                  "state": "investigating",
+                  "timestamp": "2026-08-01T00:10:00.000Z"
+                }
+              ],
+              "affectedComponents": [
+                "api"
+              ]
+            }
+          ],
+          "name": "incident serializer includes stateHistory array",
+          "expect": {
+            "contains": {
+              "stateHistory": "array"
+            }
+          },
+          "export": "serializeIncident",
+          "module": "src/controllers/incidentsController.js"
+        }
+      ],
+      "capability": "Exposes CRUD/read Express endpoints for incidents, including declaring incidents and reading full state-transition history.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002"
+      ],
+      "prompt_template": "You are a backend API agent. Build Express routes for GET /api/incidents (list), GET /api/incidents/:id (detail with full stateHistory), and POST/PATCH endpoints to create incidents and transition their state, appending a timestamped entry to stateHistory on every transition. Reuse the schema from SKILL_001 and read from the seeded store from SKILL_002. Keep response serialization in a dedicated function so it is unit-testable independent of the HTTP layer.",
+      "acceptance_criteria": [
+        "GET /api/incidents returns the full list of seeded incidents on a fresh install",
+        "GET /api/incidents/:id returns a single incident including its complete stateHistory array",
+        "Response serializer includes id, title, severity, affectedComponents, summary, state, and stateHistory fields on every incident payload"
+      ]
+    },
+    {
+      "name": "Components REST API Endpoints",
+      "tool": "Express REST API",
+      "priority": "P0",
+      "skill_id": "SKILL_005",
+      "testcases": [
+        {
+          "args": [
+            {
+              "id": "comp-1",
+              "name": "API",
+              "healthState": "operational",
+              "uptimePercent": 99.95
+            }
+          ],
+          "name": "component serializer includes numeric uptimePercent",
+          "expect": {
+            "contains": {
+              "uptimePercent": "number"
+            }
+          },
+          "export": "serializeComponent",
+          "module": "src/controllers/componentsController.js"
+        }
+      ],
+      "capability": "Exposes CRUD/read Express endpoints for components including health state and computed uptime percentage.",
+      "dependencies": [
+        "SKILL_001",
+        "SKILL_002"
+      ],
+      "prompt_template": "You are a backend API agent. Build Express routes for GET /api/components (list) and GET /api/components/:id (detail), returning each component's id, name, healthState, and uptimePercent computed via the uptime engine from SKILL_003. Reuse the schema from SKILL_001 and the seeded store from SKILL_002. Keep response serialization in a dedicated, independently testable function.",
+      "acceptance_criteria": [
+        "GET /api/components returns the full list of seeded components on a fresh install",
+        "GET /api/components/:id returns a single component including its current healthState and uptimePercent",
+        "Response serializer includes uptimePercent as a numeric field on every component payload"
+      ]
+    },
+    {
+      "name": "Aggregate Stats Endpoint",
+      "tool": "Express REST API",
+      "priority": "P0",
+      "skill_id": "SKILL_006",
+      "testcases": [
+        {
+          "args": [
+            [
+              {
+                "state": "resolved",
+                "stateHistory": [
+                  {
+                    "state": "open",
+                    "timestamp": "2026-08-01T00:00:00.000Z"
+                  },
+                  {
+                    "state": "resolved",
+                    "timestamp": "2026-08-01T01:00:00.000Z"
+                  }
+                ]
+              }
+            ]
+          ],
+          "name": "MTTR in minutes for a single resolved incident",
+          "expect": {
+            "equals": 60
+          },
+          "export": "computeMTTR",
+          "module": "src/services/stats.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "state": "open"
+              },
+              {
+                "state": "resolved"
+              },
+              {
+                "state": "investigating"
+              }
+            ]
+          ],
+          "name": "open count excludes resolved incidents",
+          "expect": {
+            "equals": 2
+          },
+          "export": "computeOpenCount",
+          "module": "src/services/stats.js"
+        },
+        {
+          "args": [
+            [
+              {
+                "createdAt": "2026-08-05T00:00:00.000Z"
+              },
+              {
+                "createdAt": "2026-07-01T00:00:00.000Z"
+              }
+            ],
+            "2026-08-13T00:00:00.000Z"
+          ],
+          "name": "incidents this month filters by reference date's month",
+          "expect": {
+            "equals": 1
+          },
+          "export": "computeIncidentsThisMonth",
+          "module": "src/services/stats.js"
+        }
+      ],
+      "capability": "Computes and exposes aggregate operational stats — MTTR, open incident count, incidents this month, and overall uptime — via a single stats endpoint.",
+      "dependencies": [
+        "SKILL_003",
+        "SKILL_004",
+        "SKILL_005"
+      ],
+      "prompt_template": "You are a backend stats agent. Implement pure helper functions computeMTTR(incidents), computeOpenCount(incidents), and computeIncidentsThisMonth(incidents, referenceDate) that take arrays of incidents (and an injectable reference date, never Date.now()) and return deterministic numeric results. Wire these plus the overall uptime engine from SKILL_003 into a GET /api/stats endpoint that aggregates across the incidents and components APIs from SKILL_004 and SKILL_005.",
+      "acceptance_criteria": [
+        "computeMTTR returns the exact mean time-to-resolution in minutes for a fixed array of resolved incidents",
+        "computeOpenCount returns the exact count of incidents not in the resolved state for a fixed array",
+        "computeIncidentsThisMonth returns the exact count of incidents whose createdAt falls in the same month as a given reference date",
+        "GET /api/stats returns MTTR, open count, incidents this month, and overall uptime in a single response"
+      ]
+    }
+  ],
+  "metadata": {
+    "epic_key": "PLB-2",
+    "prd_title": "PRD - Pulseboard",
+    "generated": "2026-08-13T08:08:07.940908Z",
+    "total": 6,
+    "p0_count": 6,
+    "p1_count": 0,
+    "p2_count": 0
+  }
+}
