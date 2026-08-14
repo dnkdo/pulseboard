@@ -41,6 +41,43 @@ export function getAllIncidents(db) {
   return db.prepare('SELECT * FROM incidents ORDER BY created_at ASC').all().map(rowToIncident);
 }
 
+export function getIncidentById(db, id) {
+  const row = db.prepare('SELECT * FROM incidents WHERE id = ?').get(id);
+  return row ? rowToIncident(row) : undefined;
+}
+
+// Reconstructs the full sequence of state changes for an incident from
+// incident_state_transitions (populated by the PATCH /:id transition
+// handler). Incidents with no recorded transitions — e.g. seeded fixtures,
+// which are inserted directly into the incidents table — fall back to a
+// single entry for their current state, since no earlier state is recorded
+// anywhere for them.
+export function getIncidentStateHistory(db, incident) {
+  const transitions = db
+    .prepare(
+      `SELECT from_state, to_state, transitioned_at FROM incident_state_transitions
+       WHERE incident_id = ? ORDER BY transitioned_at ASC, id ASC`
+    )
+    .all(incident.id);
+
+  if (transitions.length === 0) {
+    return [{ state: incident.state, timestamp: incident.createdAt }];
+  }
+
+  const history = [];
+  // A NULL from_state on the earliest transition means that row already
+  // records the creation event (its to_state is the incident's initial
+  // state) — nothing earlier to back-fill. A non-null from_state means the
+  // creation event itself wasn't recorded, so back-fill it from createdAt.
+  if (transitions[0].from_state !== null) {
+    history.push({ state: transitions[0].from_state, timestamp: incident.createdAt });
+  }
+  for (const transition of transitions) {
+    history.push({ state: transition.to_state, timestamp: transition.transitioned_at });
+  }
+  return history;
+}
+
 // Test-only helper: clears every incident (and its transitions) from the
 // given db so incident lists and ids don't leak across independent test
 // cases. Transitions are deleted first to satisfy the incident_id FK.
