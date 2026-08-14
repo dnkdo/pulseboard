@@ -11,8 +11,9 @@
   "scripts": {
     "test": "vitest run && npm run test --workspaces --if-present",
     "test:coverage": "vitest run --coverage",
+    "audit:colors": "node scripts/color-usage-audit.js",
     "vercel-build": "vercel build",
-    "lint": "eslint src client/src server tests --ext .js,.jsx --no-error-on-unmatched-pattern",
+    "lint": "eslint src client/src server tests --ext .js,.jsx --no-error-on-unmatched-pattern && npm run audit:colors",
     "format": "prettier --write ."
   },
   "dependencies": {
