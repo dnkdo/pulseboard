@@ -9,7 +9,7 @@
     "server"
   ],
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run && npm run test --workspaces --if-present",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
