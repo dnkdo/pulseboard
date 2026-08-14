@@ -1,5 +1,7 @@
 import express from 'express';
-import incidentsRouter from '../routes/incidents.js';
+import db from '../../src/index.js';
+import { createStatsRouter } from './routes/stats.js';
+import { createIncidentsRouter } from './routes/incidents.js';
 import componentsRouter from '../routes/components.js';
 
 const app = express();
@@ -10,7 +12,8 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-app.use('/api/incidents', incidentsRouter);
+app.use('/api/stats', createStatsRouter(db));
+app.use('/api/incidents', createIncidentsRouter(db));
 app.use('/api/components', componentsRouter);
 
 export default app;

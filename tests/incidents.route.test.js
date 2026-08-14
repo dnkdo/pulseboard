@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import app from '../server/src/app.js';
+import db from '../src/index.js';
 import { createIncident, resetIncidentStore } from '../server/store/incidentStore.js';
 
 function seedIncident({ severity, createdAt }) {
   return createIncident(
+    db,
     {
       title: `${severity} incident`,
       severity,
@@ -19,7 +21,7 @@ describe('GET /api/incidents', () => {
   let seeded;
 
   beforeEach(() => {
-    resetIncidentStore();
+    resetIncidentStore(db);
     seeded = [
       seedIncident({ severity: 'SEV1', createdAt: '2026-08-01T00:00:00.000Z' }),
       seedIncident({ severity: 'SEV2', createdAt: '2026-08-05T00:00:00.000Z' }),
@@ -30,7 +32,7 @@ describe('GET /api/incidents', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-    resetIncidentStore();
+    resetIncidentStore(db);
   });
 
   it('returns only incidents matching severity passed as repeated query params', async () => {

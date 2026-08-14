@@ -25,6 +25,10 @@ function buildSchemaSql() {
       severity TEXT NOT NULL CHECK (severity IN (${severityCheck})),
       state TEXT NOT NULL DEFAULT '${defaultState}' CHECK (state IN (${stateCheck})),
       component_id TEXT REFERENCES components(id),
+      -- JSON-encoded free-form component list (string or array) accepted by
+      -- POST /api/incidents; distinct from component_id, which is a strict FK
+      -- used by seeded/dashboard incidents tied to exactly one component.
+      affected_components TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );

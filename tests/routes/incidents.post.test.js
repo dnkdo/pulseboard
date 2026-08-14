@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../../server/src/app.js';
+import db from '../../src/index.js';
 import { resetIncidentStore } from '../../server/store/incidentStore.js';
 
 const VALID_PAYLOAD = {
@@ -11,7 +12,7 @@ const VALID_PAYLOAD = {
 };
 
 beforeEach(() => {
-  resetIncidentStore();
+  resetIncidentStore(db);
 });
 
 describe('POST /api/incidents — validation (AC1)', () => {

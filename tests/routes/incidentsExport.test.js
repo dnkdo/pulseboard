@@ -1,11 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../../server/src/app.js';
-import {
-  createIncident,
-  getAllIncidents,
-  resetIncidentStore,
-} from '../../server/store/incidentStore.js';
+import db from '../../src/index.js';
+import { createIncident, getAllIncidents, resetIncidentStore } from '../../server/store/incidentStore.js';
 import { toCSV } from '../../server/utils/exportIncidents.js';
 
 const SEED_PAYLOADS = [
@@ -24,14 +21,12 @@ const SEED_PAYLOADS = [
 ];
 
 beforeEach(() => {
-  resetIncidentStore();
+  resetIncidentStore(db);
 });
 
 describe('GET /api/incidents/export', () => {
   it('format=csv returns 200, text/csv, an attachment header, and one CSV row per incident plus a header row', async () => {
-    SEED_PAYLOADS.forEach((payload) =>
-      createIncident(payload, { now: () => '2026-08-13T00:00:00.000Z' }),
-    );
+    SEED_PAYLOADS.forEach((payload) => createIncident(db, payload, { now: () => '2026-08-13T00:00:00.000Z' }));
 
     const res = await request(app).get('/api/incidents/export?format=csv');
 
@@ -42,11 +37,11 @@ describe('GET /api/incidents/export', () => {
 
     const lines = res.text.split('\n');
     expect(lines).toHaveLength(SEED_PAYLOADS.length + 1);
-    expect(lines[0]).toBe(toCSV([getAllIncidents()[0]]).split('\n')[0]);
+    expect(lines[0]).toBe(toCSV([getAllIncidents(db)[0]]).split('\n')[0]);
   });
 
   it('format=json returns 200, application/json, an attachment header, and a body that parses back to the full incident array', async () => {
-    SEED_PAYLOADS.forEach((payload) => createIncident(payload));
+    SEED_PAYLOADS.forEach((payload) => createIncident(db, payload));
 
     const res = await request(app).get('/api/incidents/export?format=json');
 
@@ -64,7 +59,7 @@ describe('GET /api/incidents/export', () => {
   });
 
   it('defaults to JSON when format is omitted', async () => {
-    createIncident(SEED_PAYLOADS[0]);
+    createIncident(db, SEED_PAYLOADS[0]);
 
     const res = await request(app).get('/api/incidents/export');
 
@@ -73,7 +68,7 @@ describe('GET /api/incidents/export', () => {
   });
 
   it('defaults to JSON when format is unrecognized', async () => {
-    createIncident(SEED_PAYLOADS[0]);
+    createIncident(db, SEED_PAYLOADS[0]);
 
     const res = await request(app).get('/api/incidents/export?format=xml');
 
@@ -83,7 +78,7 @@ describe('GET /api/incidents/export', () => {
   });
 
   it('is not shadowed by a route that would treat "export" as an incident id', async () => {
-    createIncident(SEED_PAYLOADS[0]);
+    createIncident(db, SEED_PAYLOADS[0]);
 
     const res = await request(app).get('/api/incidents/export?format=csv');
 
