@@ -1,16 +1,18 @@
 // Single incidents router for /api/incidents — consolidated onto the shared
-// SQLite db (src/models/db.js) so create (POST), list/filter (GET), export
-// (GET /export), and the sequential state-machine transition (PATCH /:id)
-// all read and write the same incident rows. Previously GET/POST/export
-// lived on a separate in-memory store mounted at the same path as this
-// PATCH-only router; that split meant incidents created via POST were
-// invisible to PATCH and to computeStatCards. See CLAUDE.md's incident
-// state machine section — PATCH must always go through isValidTransition.
+// SQLite db (src/models/db.js) so create (POST), list/filter (GET),
+// detail (GET /:id), export (GET /export), and the sequential state-machine
+// transition (PATCH /:id) all read and write the same incident rows.
+// Previously GET/POST/export lived on a separate in-memory store mounted at
+// the same path as this PATCH-only router; that split meant incidents
+// created via POST were invisible to PATCH and to computeStatCards. See
+// CLAUDE.md's incident state machine section — PATCH must always go through
+// isValidTransition. List/detail responses are shaped by the shared
+// serializeIncident (src/controllers/incidentsController.js).
 import { Router } from 'express';
 import { validateIncident } from '../../../src/lib/validateIncident.js';
 import { isValidTransition } from '../../../src/lib/incidentState.js';
+import { listIncidents, getIncidentById } from '../../../src/controllers/incidentsController.js';
 import { createIncident, getAllIncidents } from '../../store/incidentStore.js';
-import { filterIncidents } from '../../utils/filterIncidents.js';
 import { toCSV, toJSON } from '../../utils/exportIncidents.js';
 
 const FIELD_MESSAGES = {
@@ -30,17 +32,6 @@ function buildValidationErrors(invalidFields) {
     errors[RESPONSE_FIELD_NAMES[field] || field] = FIELD_MESSAGES[field];
     return errors;
   }, {});
-}
-
-// Query params arrive as strings; 'SEV1,SEV2' becomes ['SEV1', 'SEV2'] so
-// filterIncidents can treat severity uniformly as a set membership check.
-function parseSeverityParam(raw) {
-  if (raw === undefined) {
-    return undefined;
-  }
-
-  const values = Array.isArray(raw) ? raw : String(raw).split(',');
-  return values.map((value) => value.trim()).filter(Boolean);
 }
 
 const EXPORT_CONTENT_TYPES = {
@@ -68,17 +59,9 @@ export function createIncidentsRouter(db) {
     res.status(200).send(body);
   });
 
-  router.get('/', (req, res) => {
-    const { severity, startDate, endDate } = req.query;
+  router.get('/:id', getIncidentById(db));
 
-    const filtered = filterIncidents(getAllIncidents(db), {
-      severity: parseSeverityParam(severity),
-      startDate,
-      endDate,
-    });
-
-    res.status(200).json(filtered);
-  });
+  router.get('/', listIncidents(db));
 
   router.post('/', (req, res) => {
     const { title, severity, affected_components: affectedComponents, summary } = req.body ?? {};
