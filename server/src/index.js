@@ -1,3 +1,7 @@
-// Express API entry point — scaffolding placeholder (PLB-57).
-// The Express app itself is added in a later sub-task once the `express`
-// dependency is wired into server/package.json.
+import app from './app.js';
+
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Pulseboard server listening on port ${PORT}`);
+});
