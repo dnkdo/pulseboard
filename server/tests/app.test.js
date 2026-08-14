@@ -63,7 +63,11 @@ describe('server startup (npm start)', () => {
       let stdout = '';
       let stderr = '';
       const timeout = setTimeout(() => {
-        reject(new Error(`Server did not report listening within timeout. stdout=${stdout} stderr=${stderr}`));
+        reject(
+          new Error(
+            `Server did not report listening within timeout. stdout=${stdout} stderr=${stderr}`,
+          ),
+        );
       }, 10000);
 
       child.stdout.on('data', (chunk) => {

@@ -75,34 +75,30 @@ describe('root package.json test script', () => {
 });
 
 describe('npm test end-to-end (CLI)', () => {
-  it(
-    'exits 0 and reports passing test files across the root suite and every workspace',
-    () => {
-      if (process.env.PULSEBOARD_TEST_NO_RECURSE === '1') {
-        // Already running inside a spawned `npm test` started by this very test;
-        // skip spawning another one so the check terminates instead of recursing forever.
-        return;
-      }
+  it('exits 0 and reports passing test files across the root suite and every workspace', () => {
+    if (process.env.PULSEBOARD_TEST_NO_RECURSE === '1') {
+      // Already running inside a spawned `npm test` started by this very test;
+      // skip spawning another one so the check terminates instead of recursing forever.
+      return;
+    }
 
-      const output = execFileSync('npm', ['test'], {
-        cwd: repoRoot,
-        encoding: 'utf-8',
-        env: {
-          ...process.env,
-          PULSEBOARD_TEST_NO_RECURSE: '1',
-          // Force plain-text reporter output regardless of the parent
-          // environment's color support, so the assertions below don't have
-          // to account for ANSI escape codes wrapping the summary line.
-          NO_COLOR: '1',
-          FORCE_COLOR: '0',
-        },
-      });
+    const output = execFileSync('npm', ['test'], {
+      cwd: repoRoot,
+      encoding: 'utf-8',
+      env: {
+        ...process.env,
+        PULSEBOARD_TEST_NO_RECURSE: '1',
+        // Force plain-text reporter output regardless of the parent
+        // environment's color support, so the assertions below don't have
+        // to account for ANSI escape codes wrapping the summary line.
+        NO_COLOR: '1',
+        FORCE_COLOR: '0',
+      },
+    });
 
-      const plainOutput = stripAnsi(output);
+    const plainOutput = stripAnsi(output);
 
-      expect(plainOutput).toMatch(/Test Files\s+\d+ passed/);
-      expect(plainOutput).not.toMatch(/Test Files\s+\d+ failed/);
-    },
-    120000,
-  );
+    expect(plainOutput).toMatch(/Test Files\s+\d+ passed/);
+    expect(plainOutput).not.toMatch(/Test Files\s+\d+ failed/);
+  }, 120000);
 });

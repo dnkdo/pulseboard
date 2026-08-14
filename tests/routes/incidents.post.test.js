@@ -20,33 +20,43 @@ describe('POST /api/incidents — validation (AC1)', () => {
     ['severity', { ...VALID_PAYLOAD, severity: '' }, 'severity'],
     ['affected_components', { ...VALID_PAYLOAD, affected_components: [] }, 'affected_components'],
     ['summary', { ...VALID_PAYLOAD, summary: '' }, 'summary'],
-  ])('returns 400 with a field-level message when %s is empty', async (_label, payload, expectedKey) => {
-    const res = await request(app).post('/api/incidents').send(payload);
+  ])(
+    'returns 400 with a field-level message when %s is empty',
+    async (_label, payload, expectedKey) => {
+      const res = await request(app).post('/api/incidents').send(payload);
 
-    expect(res.status).toBe(400);
-    expect(res.body.errors).toHaveProperty(expectedKey);
-    expect(typeof res.body.errors[expectedKey]).toBe('string');
-    expect(res.body.errors[expectedKey].length).toBeGreaterThan(0);
-  });
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toHaveProperty(expectedKey);
+      expect(typeof res.body.errors[expectedKey]).toBe('string');
+      expect(res.body.errors[expectedKey].length).toBeGreaterThan(0);
+    },
+  );
 
   it.each([
     ['title', { ...VALID_PAYLOAD, title: undefined }, 'title'],
     ['severity', { ...VALID_PAYLOAD, severity: undefined }, 'severity'],
-    ['affected_components', { ...VALID_PAYLOAD, affected_components: undefined }, 'affected_components'],
+    [
+      'affected_components',
+      { ...VALID_PAYLOAD, affected_components: undefined },
+      'affected_components',
+    ],
     ['summary', { ...VALID_PAYLOAD, summary: undefined }, 'summary'],
-  ])('returns 400 with a field-level message when %s is missing', async (_label, payload, expectedKey) => {
-    const res = await request(app).post('/api/incidents').send(payload);
+  ])(
+    'returns 400 with a field-level message when %s is missing',
+    async (_label, payload, expectedKey) => {
+      const res = await request(app).post('/api/incidents').send(payload);
 
-    expect(res.status).toBe(400);
-    expect(res.body.errors).toHaveProperty(expectedKey);
-  });
+      expect(res.status).toBe(400);
+      expect(res.body.errors).toHaveProperty(expectedKey);
+    },
+  );
 
   it('returns 400 with all four field errors when the body is empty, and does not create an incident', async () => {
     const res = await request(app).post('/api/incidents').send({});
 
     expect(res.status).toBe(400);
     expect(Object.keys(res.body.errors).sort()).toEqual(
-      ['affected_components', 'severity', 'summary', 'title'].sort()
+      ['affected_components', 'severity', 'summary', 'title'].sort(),
     );
 
     const listRes = await request(app).get('/api/incidents');
@@ -54,7 +64,9 @@ describe('POST /api/incidents — validation (AC1)', () => {
   });
 
   it('does not persist an incident when validation fails', async () => {
-    await request(app).post('/api/incidents').send({ ...VALID_PAYLOAD, title: '' });
+    await request(app)
+      .post('/api/incidents')
+      .send({ ...VALID_PAYLOAD, title: '' });
     const listRes = await request(app).get('/api/incidents');
     expect(listRes.body).toHaveLength(0);
   });
@@ -110,7 +122,7 @@ describe('POST /api/incidents — immediate GET visibility (AC3)', () => {
     const getRes = await request(app).get('/api/incidents');
     expect(getRes.body).toHaveLength(2);
     expect(getRes.body.map((incident) => incident.title)).toEqual(
-      expect.arrayContaining(['API latency spike', 'DB connection pool exhausted'])
+      expect.arrayContaining(['API latency spike', 'DB connection pool exhausted']),
     );
   });
 });

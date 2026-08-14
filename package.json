@@ -11,7 +11,9 @@
   "scripts": {
     "test": "vitest run && npm run test --workspaces --if-present",
     "test:coverage": "vitest run --coverage",
-    "vercel-build": "vercel build"
+    "vercel-build": "vercel build",
+    "lint": "eslint src client/src server tests --ext .js,.jsx --no-error-on-unmatched-pattern",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "better-sqlite3": "^11.3.0",
@@ -24,6 +26,11 @@
     "jsdom": "^25.0.1",
     "supertest": "^7.2.2",
     "vercel": "^59.0.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2"
   }
 }

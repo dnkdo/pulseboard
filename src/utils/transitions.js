@@ -2,7 +2,5 @@
 // state transitions oldest-first regardless of the order the API returns them in.
 
 export function sortTransitions(transitions) {
-  return transitions
-    .slice()
-    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  return transitions.slice().sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 }

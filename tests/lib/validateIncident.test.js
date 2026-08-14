@@ -20,7 +20,7 @@ describe('validateIncident', () => {
 
   it('flags every required field as missing when the payload is empty', () => {
     expect(validateIncident({})).toEqual(
-      expect.arrayContaining(['title', 'severity', 'components', 'summary'])
+      expect.arrayContaining(['title', 'severity', 'components', 'summary']),
     );
   });
 
@@ -59,7 +59,12 @@ describe('validateIncident', () => {
   });
 
   it('rejects an empty affected_components array', () => {
-    const payload = { title: 'Valid title', severity: 'SEV1', components: [], summary: 'Valid summary' };
+    const payload = {
+      title: 'Valid title',
+      severity: 'SEV1',
+      components: [],
+      summary: 'Valid summary',
+    };
     expect(validateIncident(payload)).toContain('components');
   });
 
@@ -74,7 +79,12 @@ describe('validateIncident', () => {
   });
 
   it('accepts a non-empty string as affected_components', () => {
-    const payload = { title: 'Valid title', severity: 'SEV1', components: 'api', summary: 'Valid summary' };
+    const payload = {
+      title: 'Valid title',
+      severity: 'SEV1',
+      components: 'api',
+      summary: 'Valid summary',
+    };
     expect(validateIncident(payload)).toEqual([]);
   });
 
@@ -85,7 +95,7 @@ describe('validateIncident', () => {
 
   it('defaults to an empty payload when called with no arguments, flagging all fields', () => {
     expect(validateIncident()).toEqual(
-      expect.arrayContaining(['title', 'severity', 'components', 'summary'])
+      expect.arrayContaining(['title', 'severity', 'components', 'summary']),
     );
   });
 });

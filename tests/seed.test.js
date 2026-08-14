@@ -157,12 +157,20 @@ describe('seedIfFresh (startup orchestration)', () => {
     const db = initDatabase();
 
     const first = seedIfFresh(db);
-    const componentCountAfterFirst = db.prepare('SELECT COUNT(*) AS count FROM components').get().count;
-    const incidentCountAfterFirst = db.prepare('SELECT COUNT(*) AS count FROM incidents').get().count;
+    const componentCountAfterFirst = db
+      .prepare('SELECT COUNT(*) AS count FROM components')
+      .get().count;
+    const incidentCountAfterFirst = db
+      .prepare('SELECT COUNT(*) AS count FROM incidents')
+      .get().count;
 
     const second = seedIfFresh(db);
-    const componentCountAfterSecond = db.prepare('SELECT COUNT(*) AS count FROM components').get().count;
-    const incidentCountAfterSecond = db.prepare('SELECT COUNT(*) AS count FROM incidents').get().count;
+    const componentCountAfterSecond = db
+      .prepare('SELECT COUNT(*) AS count FROM components')
+      .get().count;
+    const incidentCountAfterSecond = db
+      .prepare('SELECT COUNT(*) AS count FROM incidents')
+      .get().count;
 
     expect(first.seeded).toBe(true);
     expect(second.seeded).toBe(false);
@@ -175,7 +183,7 @@ describe('seedIfFresh (startup orchestration)', () => {
   it('does not seed a database that already has manually-inserted data, even if incidents table is still empty', () => {
     const db = initDatabase();
     db.prepare(
-      "INSERT INTO components (id, name, description, created_at) VALUES ('manual-comp', 'Manual', 'x', '2026-08-01T00:00:00.000Z')"
+      "INSERT INTO components (id, name, description, created_at) VALUES ('manual-comp', 'Manual', 'x', '2026-08-01T00:00:00.000Z')",
     ).run();
 
     const result = seedIfFresh(db);
@@ -204,7 +212,10 @@ describe('automatic seeding on a true fresh install (end-to-end)', () => {
     expect(componentCount).toBeGreaterThanOrEqual(4);
     expect(incidentCount).toBeGreaterThan(0);
 
-    const states = db.prepare('SELECT DISTINCT state FROM incidents').all().map((r) => r.state);
+    const states = db
+      .prepare('SELECT DISTINCT state FROM incidents')
+      .all()
+      .map((r) => r.state);
     for (const state of INCIDENT_STATES) {
       expect(states).toContain(state);
     }

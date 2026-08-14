@@ -8,5 +8,13 @@ import { isFreshDatabase, seedDatabase, seedIfFresh } from './models/seed.js';
 const db = initDatabase(process.env.PLB_DB_PATH || ':memory:');
 seedIfFresh(db);
 
-export { initDatabase, db, SEVERITIES, INCIDENT_STATES, isFreshDatabase, seedDatabase, seedIfFresh };
+export {
+  initDatabase,
+  db,
+  SEVERITIES,
+  INCIDENT_STATES,
+  isFreshDatabase,
+  seedDatabase,
+  seedIfFresh,
+};
 export default db;

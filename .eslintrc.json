@@ -1,0 +1,49 @@
+{
+  "root": true,
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "extends": ["eslint:recommended", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "ignorePatterns": ["node_modules/", "dist/", "build/", "coverage/"],
+  "overrides": [
+    {
+      "files": ["client/**/*.js", "client/**/*.jsx", "src/**/*.{js,jsx}", "tests/**/*.jsx"],
+      "env": {
+        "browser": true,
+        "es2021": true
+      },
+      "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module",
+        "ecmaFeatures": {
+          "jsx": true
+        }
+      },
+      "extends": [
+        "plugin:react/recommended",
+        "plugin:react/jsx-runtime",
+        "plugin:react-hooks/recommended"
+      ],
+      "settings": {
+        "react": {
+          "version": "detect"
+        }
+      },
+      "rules": {
+        "react/prop-types": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.js", "**/*.test.jsx"],
+      "env": {
+        "node": true,
+        "es2021": true
+      }
+    }
+  ]
+}

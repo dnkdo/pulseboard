@@ -38,11 +38,11 @@ export function seedDatabase(db) {
 
   const insertComponent = db.prepare(
     `INSERT INTO components (id, name, description, created_at)
-     VALUES (@id, @name, @description, @created_at)`
+     VALUES (@id, @name, @description, @created_at)`,
   );
   const insertIncident = db.prepare(
     `INSERT INTO incidents (id, title, description, severity, state, component_id, created_at, updated_at)
-     VALUES (@id, @title, @description, @severity, @state, @component_id, @created_at, @updated_at)`
+     VALUES (@id, @title, @description, @severity, @state, @component_id, @created_at, @updated_at)`,
   );
 
   const runSeed = db.transaction(() => {

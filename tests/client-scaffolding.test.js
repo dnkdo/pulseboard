@@ -83,16 +83,18 @@ describe('npm run dev starts the Vite dev server', () => {
       let output = '';
       let settled = false;
 
-      child = spawn(
-        'npm',
-        ['run', 'dev', '--', '--port', port, '--strictPort'],
-        { cwd: clientDir, stdio: ['ignore', 'pipe', 'pipe'], detached: true },
-      );
+      child = spawn('npm', ['run', 'dev', '--', '--port', port, '--strictPort'], {
+        cwd: clientDir,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        detached: true,
+      });
 
       const timer = setTimeout(() => {
         if (!settled) {
           settled = true;
-          reject(new Error(`Vite dev server did not become ready in time. Output so far:\n${output}`));
+          reject(
+            new Error(`Vite dev server did not become ready in time. Output so far:\n${output}`),
+          );
         }
       }, 20000);
 

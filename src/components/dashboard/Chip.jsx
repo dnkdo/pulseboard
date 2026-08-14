@@ -1,4 +1,3 @@
-import React from 'react';
 import { useIncidentStatus } from '../../hooks/useIncidentStatus.js';
 import { getStateChipProps } from './stateChips.js';
 import { chipStyle, chipNeutralStyle } from './Chip.styles.js';
