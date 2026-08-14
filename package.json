@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "test": "vitest run && npm run test --workspaces --if-present",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "vercel-build": "vercel build"
   },
   "dependencies": {
     "better-sqlite3": "^11.3.0",
@@ -22,6 +23,7 @@
     "@vitest/coverage-v8": "^4.1.10",
     "jsdom": "^25.0.1",
     "supertest": "^7.2.2",
+    "vercel": "^59.0.0",
     "vitest": "^4.1.10"
   }
 }
