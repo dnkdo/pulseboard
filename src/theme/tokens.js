@@ -17,3 +17,8 @@ export const STATE_RESOLVED = '#10B981'; // token: colors.status-operational (gr
 export const SEV1_COLOR = '#EF4444'; // token: colors.sev1 (red)
 export const SEV2_COLOR = '#F97316'; // token: colors.sev2 (orange)
 export const SEV3_COLOR = '#FBBF24'; // token: colors.sev3 (yellow)
+
+// Fallback for a severity value outside SEV1/2/3 (e.g. malformed data).
+// Deliberately a muted slate, never a severity hue, so an unknown value
+// can't be mistaken for a real SEV1/2/3 marker. token: colors.text-muted-dark
+export const NEUTRAL_SEVERITY_COLOR = '#94A3B8';
