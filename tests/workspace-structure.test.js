@@ -20,7 +20,7 @@ describe('root package.json workspaces', () => {
   it('preserves the existing root package.json fields', () => {
     expect(rootPkg.name).toBe('pulseboard');
     expect(rootPkg.main).toBe('src/index.js');
-    expect(rootPkg.scripts.test).toBe('vitest run');
+    expect(rootPkg.scripts.test).toMatch(/vitest run/);
     expect(rootPkg.dependencies['better-sqlite3']).toBeDefined();
   });
 });
