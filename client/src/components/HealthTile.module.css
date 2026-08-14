@@ -1,0 +1,41 @@
+/* Public status page (light theme) — tokens from .adlc/design/tokens.json */
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* spacing: 8 */
+  padding: 16px; /* spacing: 16 (card padding) */
+  border-radius: 8px; /* radius-lg */
+  background-color: #ffffff; /* surface-primary-light */
+  border: 1px solid #e2e8f0; /* border-light */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* spacing: 8 */
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: 16px; /* typography.body-lg */
+  font-weight: 600; /* typography.h4 weight */
+  color: #1e293b; /* text-primary-light */
+}
+
+.status {
+  font-size: 12px; /* typography.label */
+  font-weight: 600;
+  color: #475569; /* text-secondary-light */
+}
+
+.uptime {
+  font-size: 14px; /* typography.body-md */
+  color: #94a3b8; /* text-muted-light */
+}
