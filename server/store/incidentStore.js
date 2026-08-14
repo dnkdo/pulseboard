@@ -1,32 +1,49 @@
-// In-memory incident store shared by the POST and GET route handlers within
-// a single Node process. No external DB is configured for this stack (per
-// CLAUDE.md), so this module is the single source of truth for incidents —
-// synchronous access here is what guarantees a newly created incident is
-// immediately visible to GET /api/incidents with no artificial delay.
-let incidents = [];
-let nextId = 1;
+// Incident data-access layer backed by the shared SQLite database (see
+// src/models/db.js) — the single source of truth for incidents, so a POST
+// here and the PATCH /:id transition handler (server/src/routes/incidents.js)
+// and computeStatCards (src/lib/stats.js) all read/write the same rows.
+// Every function takes `db` explicitly so route factories and tests can pass
+// either the app's shared singleton (src/index.js) or an isolated test db.
+import crypto from 'node:crypto';
 
-export function createIncident(fields, { now = () => new Date().toISOString() } = {}) {
-  const incident = {
-    id: String(nextId++),
-    title: fields.title,
-    severity: fields.severity,
-    affected_components: fields.affected_components,
-    summary: fields.summary,
-    state: 'open',
-    createdAt: now(),
+function rowToIncident(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    severity: row.severity,
+    affected_components: row.affected_components === null ? [] : JSON.parse(row.affected_components),
+    summary: row.description,
+    state: row.state,
+    createdAt: row.created_at,
   };
-  incidents.push(incident);
-  return incident;
 }
 
-export function getAllIncidents() {
-  return incidents;
+export function createIncident(db, fields, { now = () => new Date().toISOString() } = {}) {
+  const id = crypto.randomUUID();
+  const createdAt = now();
+
+  db.prepare(
+    `INSERT INTO incidents (id, title, description, severity, state, component_id, affected_components, created_at, updated_at)
+     VALUES (@id, @title, @description, @severity, 'open', NULL, @affectedComponents, @createdAt, @createdAt)`
+  ).run({
+    id,
+    title: fields.title,
+    description: fields.summary,
+    severity: fields.severity,
+    affectedComponents: JSON.stringify(fields.affected_components),
+    createdAt,
+  });
+
+  return rowToIncident(db.prepare('SELECT * FROM incidents WHERE id = ?').get(id));
 }
 
-// Test-only helper: resets module-level state between test cases so
-// incident IDs and list contents don't leak across independent test runs.
-export function resetIncidentStore() {
-  incidents = [];
-  nextId = 1;
+export function getAllIncidents(db) {
+  return db.prepare('SELECT * FROM incidents ORDER BY created_at ASC').all().map(rowToIncident);
+}
+
+// Test-only helper: clears every incident (and its transitions) from the
+// given db so incident lists and ids don't leak across independent test
+// cases. Transitions are deleted first to satisfy the incident_id FK.
+export function resetIncidentStore(db) {
+  db.exec('DELETE FROM incident_state_transitions; DELETE FROM incidents;');
 }

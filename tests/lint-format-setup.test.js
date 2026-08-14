@@ -96,7 +96,7 @@ describe('lint script actually covers the full server source tree', () => {
 
       expect(lintedFiles).toEqual(
         expect.arrayContaining([
-          path.join('server', 'routes', 'incidents.js'),
+          path.join('server', 'src', 'routes', 'incidents.js'),
           path.join('server', 'models', 'component.js'),
           path.join('server', 'store', 'incidentStore.js'),
           path.join('server', 'utils', 'exportIncidents.js'),
