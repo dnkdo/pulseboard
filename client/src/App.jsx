@@ -1,5 +1,5 @@
 function App() {
-  return <div>Pulseboard</div>;
+  return <div className="flex p-4">Pulseboard</div>;
 }
 
 export default App;
