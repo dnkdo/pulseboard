@@ -1,0 +1,11 @@
+/* Public status page (light theme) — responsive 2-4 column component grid, per DESIGN.md */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px; /* spacing: 20 (stat/tile gaps) */
+}
+
+.message {
+  font-size: 14px; /* typography.body-md */
+  color: #475569; /* text-secondary-light */
+}

@@ -1,5 +1,6 @@
 import express from 'express';
 import incidentsRouter from '../routes/incidents.js';
+import componentsRouter from '../routes/components.js';
 
 const app = express();
 
@@ -10,5 +11,6 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/incidents', incidentsRouter);
+app.use('/api/components', componentsRouter);
 
 export default app;

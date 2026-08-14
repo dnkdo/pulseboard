@@ -1,7 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act } from 'react-dom/test-utils';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
+
+vi.mock('./lib/api/components.js', () => ({
+  fetchComponents: vi.fn().mockResolvedValue([]),
+}));
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('client vitest environment', () => {
   it('exposes a real DOM (document/window) because the test environment is jsdom, not node', () => {
@@ -10,16 +18,17 @@ describe('client vitest environment', () => {
     expect(document.createElement('div')).toBeInstanceOf(window.HTMLElement);
   });
 
-  it('mounts the App component and renders its text into the DOM', () => {
+  it('mounts the App component and renders the status page into the DOM', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
 
-    act(() => {
+    await act(async () => {
       root.render(<App />);
     });
 
-    expect(container.textContent).toBe('Pulseboard');
+    expect(container.textContent).toContain('Pulseboard');
+    expect(container.textContent).toContain('Component Status');
 
     act(() => {
       root.unmount();
