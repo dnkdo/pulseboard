@@ -1,12 +1,26 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import request from 'supertest';
 import app from '../../server/src/app.js';
-import { createIncident, getAllIncidents, resetIncidentStore } from '../../server/store/incidentStore.js';
+import {
+  createIncident,
+  getAllIncidents,
+  resetIncidentStore,
+} from '../../server/store/incidentStore.js';
 import { toCSV } from '../../server/utils/exportIncidents.js';
 
 const SEED_PAYLOADS = [
-  { title: 'API latency spike', severity: 'SEV2', affected_components: ['api'], summary: 'Elevated p99 latency' },
-  { title: 'DB connection pool exhausted', severity: 'SEV1', affected_components: ['db'], summary: 'Primary DB unreachable' },
+  {
+    title: 'API latency spike',
+    severity: 'SEV2',
+    affected_components: ['api'],
+    summary: 'Elevated p99 latency',
+  },
+  {
+    title: 'DB connection pool exhausted',
+    severity: 'SEV1',
+    affected_components: ['db'],
+    summary: 'Primary DB unreachable',
+  },
 ];
 
 beforeEach(() => {
@@ -15,7 +29,9 @@ beforeEach(() => {
 
 describe('GET /api/incidents/export', () => {
   it('format=csv returns 200, text/csv, an attachment header, and one CSV row per incident plus a header row', async () => {
-    SEED_PAYLOADS.forEach((payload) => createIncident(payload, { now: () => '2026-08-13T00:00:00.000Z' }));
+    SEED_PAYLOADS.forEach((payload) =>
+      createIncident(payload, { now: () => '2026-08-13T00:00:00.000Z' }),
+    );
 
     const res = await request(app).get('/api/incidents/export?format=csv');
 
@@ -43,7 +59,7 @@ describe('GET /api/incidents/export', () => {
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed).toHaveLength(SEED_PAYLOADS.length);
     expect(parsed.map((incident) => incident.title).sort()).toEqual(
-      SEED_PAYLOADS.map((p) => p.title).sort()
+      SEED_PAYLOADS.map((p) => p.title).sort(),
     );
   });
 

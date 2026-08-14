@@ -55,7 +55,15 @@ describe('filterPublicIncidentFields', () => {
     expect(Object.prototype.hasOwnProperty.call(result, 'internalNotes')).toBe(false);
     expect(Object.prototype.hasOwnProperty.call(result, 'assignee')).toBe(false);
     expect(Object.keys(result).sort()).toEqual(
-      ['affectedComponents', 'id', 'publicUpdate', 'severity', 'status', 'title', 'transitions'].sort()
+      [
+        'affectedComponents',
+        'id',
+        'publicUpdate',
+        'severity',
+        'status',
+        'title',
+        'transitions',
+      ].sort(),
     );
   });
 

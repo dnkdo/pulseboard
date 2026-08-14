@@ -102,7 +102,7 @@ describe('groupComponentsByCategory', () => {
 describe('loadComponents', () => {
   it('returns the seed fixture parsed from server/data/components.json', () => {
     const fromDisk = JSON.parse(
-      readFileSync(path.join(repoRoot, 'server', 'data', 'components.json'), 'utf-8')
+      readFileSync(path.join(repoRoot, 'server', 'data', 'components.json'), 'utf-8'),
     );
 
     expect(loadComponents()).toEqual(fromDisk);
@@ -133,7 +133,7 @@ describe('seed component data', () => {
       expect(typeof component.category).toBe('string');
       expect(component.category.trim().length).toBeGreaterThan(0);
       expect(ALLOWED_CATEGORIES).toContain(component.category);
-    }
+    },
   );
 
   it('covers every allowed category at least once so grouping is exercised end-to-end', () => {

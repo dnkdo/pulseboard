@@ -37,7 +37,9 @@ describe('initDatabase', () => {
   it('auto-creates incidents, components, and incident_state_transitions tables with zero manual setup', () => {
     const db = initDatabase();
     const names = tableNames(db);
-    expect(names).toEqual(expect.arrayContaining(['incidents', 'components', 'incident_state_transitions']));
+    expect(names).toEqual(
+      expect.arrayContaining(['incidents', 'components', 'incident_state_transitions']),
+    );
   });
 
   it('is idempotent — calling the factory again on the same file path does not throw or duplicate tables', () => {
@@ -53,39 +55,39 @@ describe('initDatabase', () => {
 
     expect(namesAfter).toEqual(namesBefore);
     expect(namesAfter).toEqual(
-      expect.arrayContaining(['components', 'incident_state_transitions', 'incidents'])
+      expect.arrayContaining(['components', 'incident_state_transitions', 'incidents']),
     );
   });
 
   it('rejects an incident insert with an invalid severity via the CHECK constraint', () => {
     const db = initDatabase();
     db.prepare(
-      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')"
+      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')",
     ).run();
 
     expect(() =>
       db
         .prepare(
           `INSERT INTO incidents (id, title, description, severity, state, component_id, created_at, updated_at)
-           VALUES ('inc-1', 'Bad severity', 'x', 'SEV9', 'open', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`
+           VALUES ('inc-1', 'Bad severity', 'x', 'SEV9', 'open', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`,
         )
-        .run()
+        .run(),
     ).toThrow(/CHECK constraint failed/);
   });
 
   it('rejects an incident insert with an invalid state via the CHECK constraint', () => {
     const db = initDatabase();
     db.prepare(
-      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')"
+      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')",
     ).run();
 
     expect(() =>
       db
         .prepare(
           `INSERT INTO incidents (id, title, description, severity, state, component_id, created_at, updated_at)
-           VALUES ('inc-1', 'Bad state', 'x', 'SEV1', 'archived', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`
+           VALUES ('inc-1', 'Bad state', 'x', 'SEV1', 'archived', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`,
         )
-        .run()
+        .run(),
     ).toThrow(/CHECK constraint failed/);
   });
 
@@ -93,21 +95,21 @@ describe('initDatabase', () => {
     const db = initDatabase();
 
     db.prepare(
-      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')"
+      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')",
     ).run();
 
     db.prepare(
       `INSERT INTO incidents (id, title, description, severity, state, component_id, created_at, updated_at)
-       VALUES ('inc-1', 'API latency spike', 'Elevated p99', 'SEV2', 'open', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`
+       VALUES ('inc-1', 'API latency spike', 'Elevated p99', 'SEV2', 'open', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`,
     ).run();
 
     db.prepare(
       `INSERT INTO incident_state_transitions (incident_id, from_state, to_state, transitioned_at)
-       VALUES ('inc-1', NULL, 'open', '2026-08-01T00:00:00.000Z')`
+       VALUES ('inc-1', NULL, 'open', '2026-08-01T00:00:00.000Z')`,
     ).run();
     db.prepare(
       `INSERT INTO incident_state_transitions (incident_id, from_state, to_state, transitioned_at)
-       VALUES ('inc-1', 'open', 'investigating', '2026-08-01T00:10:00.000Z')`
+       VALUES ('inc-1', 'open', 'investigating', '2026-08-01T00:10:00.000Z')`,
     ).run();
 
     const incident = db.prepare('SELECT * FROM incidents WHERE id = ?').get('inc-1');
@@ -128,7 +130,7 @@ describe('initDatabase', () => {
   it('auto-initializes on process startup via src/index.js with no manual initDatabase() call', () => {
     const names = tableNames(entrypointDb);
     expect(names).toEqual(
-      expect.arrayContaining(['components', 'incident_state_transitions', 'incidents'])
+      expect.arrayContaining(['components', 'incident_state_transitions', 'incidents']),
     );
     expect(() => entrypointDb.prepare('SELECT 1 AS ok').get()).not.toThrow();
   });
@@ -136,12 +138,12 @@ describe('initDatabase', () => {
   it('defaults a new incident to the first workflow state when state is omitted', () => {
     const db = initDatabase();
     db.prepare(
-      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')"
+      "INSERT INTO components (id, name, description, created_at) VALUES ('comp-1', 'API', 'Core API', '2026-08-01T00:00:00.000Z')",
     ).run();
 
     db.prepare(
       `INSERT INTO incidents (id, title, description, severity, component_id, created_at, updated_at)
-       VALUES ('inc-2', 'Default state check', 'x', 'SEV3', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`
+       VALUES ('inc-2', 'Default state check', 'x', 'SEV3', 'comp-1', '2026-08-01T00:00:00.000Z', '2026-08-01T00:00:00.000Z')`,
     ).run();
 
     const incident = db.prepare('SELECT state FROM incidents WHERE id = ?').get('inc-2');

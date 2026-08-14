@@ -20,7 +20,9 @@ function escapeCsvField(value) {
 export function toCSV(incidents) {
   const fields = incidents.length > 0 ? Object.keys(incidents[0]) : DEFAULT_FIELDS;
   const header = fields.join(',');
-  const rows = incidents.map((incident) => fields.map((field) => escapeCsvField(incident[field])).join(','));
+  const rows = incidents.map((incident) =>
+    fields.map((field) => escapeCsvField(incident[field])).join(','),
+  );
   return [header, ...rows].join('\n');
 }
 

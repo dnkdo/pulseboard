@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { validateIncident } from '../../src/lib/validateIncident.js';
 import { createIncident, getAllIncidents } from '../store/incidentStore.js';
-import { filterIncidents } from '../utils/filterIncidents.js';
 import { toCSV, toJSON } from '../utils/exportIncidents.js';
+import { filterIncidents } from '../utils/filterIncidents.js';
 
 const FIELD_MESSAGES = {
   title: 'title is required',
@@ -23,15 +23,16 @@ function buildValidationErrors(invalidFields) {
   }, {});
 }
 
-// Query params arrive as strings; 'SEV1,SEV2' becomes ['SEV1', 'SEV2'] so
-// filterIncidents can treat severity uniformly as a set membership check.
-function parseSeverityParam(raw) {
-  if (raw === undefined) {
+// Accepts severity as a repeated query param (?severity=A&severity=B, parsed
+// by Express into an array) or a comma-separated single value (?severity=A,B)
+// and normalizes both into the string[] shape filterIncidents expects.
+function parseSeverityParam(severity) {
+  if (severity === undefined) {
     return undefined;
   }
 
-  const values = Array.isArray(raw) ? raw : String(raw).split(',');
-  return values.map((value) => value.trim()).filter(Boolean);
+  const values = Array.isArray(severity) ? severity : [severity];
+  return values.flatMap((value) => String(value).split(',')).filter((value) => value !== '');
 }
 
 const router = Router();
@@ -46,7 +47,10 @@ const EXPORT_CONTENT_TYPES = {
 router.get('/export', (req, res) => {
   const { format } = req.query;
   const requestedFormat = format === undefined ? 'json' : String(format).toLowerCase();
-  const normalizedFormat = Object.prototype.hasOwnProperty.call(EXPORT_CONTENT_TYPES, requestedFormat)
+  const normalizedFormat = Object.prototype.hasOwnProperty.call(
+    EXPORT_CONTENT_TYPES,
+    requestedFormat,
+  )
     ? requestedFormat
     : 'json';
 
@@ -60,14 +64,12 @@ router.get('/export', (req, res) => {
 
 router.get('/', (req, res) => {
   const { severity, startDate, endDate } = req.query;
-
-  const filtered = filterIncidents(getAllIncidents(), {
+  const incidents = filterIncidents(getAllIncidents(), {
     severity: parseSeverityParam(severity),
     startDate,
     endDate,
   });
-
-  res.status(200).json(filtered);
+  res.json(incidents);
 });
 
 router.post('/', (req, res) => {
@@ -84,7 +86,12 @@ router.post('/', (req, res) => {
     return res.status(400).json({ errors: buildValidationErrors(invalidFields) });
   }
 
-  const incident = createIncident({ title, severity, affected_components: affectedComponents, summary });
+  const incident = createIncident({
+    title,
+    severity,
+    affected_components: affectedComponents,
+    summary,
+  });
   return res.status(201).json(incident);
 });
 

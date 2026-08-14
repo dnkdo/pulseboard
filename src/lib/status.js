@@ -42,7 +42,7 @@ export function computeOverallStatus(incidents) {
   }
 
   const highest = active.reduce((worst, incident) =>
-    severityRank(incident.severity) < severityRank(worst.severity) ? incident : worst
+    severityRank(incident.severity) < severityRank(worst.severity) ? incident : worst,
   );
 
   const meta = SEVERITY_META[highest.severity];

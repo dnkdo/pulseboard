@@ -40,7 +40,7 @@ describe('getIncidentById', () => {
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/incidents/inc-1'),
-      expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) })
+      expect.objectContaining({ headers: expect.objectContaining({ Accept: 'application/json' }) }),
     );
     expect(result.transitions.map((t) => t.state)).toEqual(['open', 'investigating', 'resolved']);
     // Internal-only fields must survive unfiltered — filtering is a separate concern.
@@ -56,7 +56,10 @@ describe('getIncidentById', () => {
 
     await getIncidentById('inc/1');
 
-    expect(fetch).toHaveBeenCalledWith(expect.stringContaining('/incidents/inc%2F1'), expect.anything());
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/incidents/inc%2F1'),
+      expect.anything(),
+    );
   });
 
   it('returns null when the API responds 404', async () => {

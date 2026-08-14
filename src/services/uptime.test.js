@@ -7,11 +7,36 @@ const MODULE_PATH = fileURLToPath(new URL('./uptime.js', import.meta.url));
 
 describe('calculateUptime', () => {
   const fixtures = [
-    { name: 'zero downtime is 100% uptime', downtimeMs: 0, totalPeriodMs: 1_000_000, expectedPercent: 100 },
-    { name: 'downtime equal to the full period is 0% uptime', downtimeMs: 1_000_000, totalPeriodMs: 1_000_000, expectedPercent: 0 },
-    { name: '1% downtime yields 99% uptime (test-contract fixture)', downtimeMs: 10_000, totalPeriodMs: 1_000_000, expectedPercent: 99 },
-    { name: '10% downtime yields a clean 90% uptime', downtimeMs: 100_000, totalPeriodMs: 1_000_000, expectedPercent: 90 },
-    { name: '25% downtime yields a clean 75% uptime', downtimeMs: 250_000, totalPeriodMs: 1_000_000, expectedPercent: 75 },
+    {
+      name: 'zero downtime is 100% uptime',
+      downtimeMs: 0,
+      totalPeriodMs: 1_000_000,
+      expectedPercent: 100,
+    },
+    {
+      name: 'downtime equal to the full period is 0% uptime',
+      downtimeMs: 1_000_000,
+      totalPeriodMs: 1_000_000,
+      expectedPercent: 0,
+    },
+    {
+      name: '1% downtime yields 99% uptime (test-contract fixture)',
+      downtimeMs: 10_000,
+      totalPeriodMs: 1_000_000,
+      expectedPercent: 99,
+    },
+    {
+      name: '10% downtime yields a clean 90% uptime',
+      downtimeMs: 100_000,
+      totalPeriodMs: 1_000_000,
+      expectedPercent: 90,
+    },
+    {
+      name: '25% downtime yields a clean 75% uptime',
+      downtimeMs: 250_000,
+      totalPeriodMs: 1_000_000,
+      expectedPercent: 75,
+    },
   ];
 
   it.each(fixtures)('$name', ({ downtimeMs, totalPeriodMs, expectedPercent }) => {

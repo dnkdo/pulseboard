@@ -41,9 +41,7 @@ describe('sortTransitions', () => {
     ];
     const result = sortTransitions(tied);
     expect(result).toHaveLength(tied.length);
-    expect(result.map((t) => t.state).sort()).toEqual(
-      tied.map((t) => t.state).sort()
-    );
+    expect(result.map((t) => t.state).sort()).toEqual(tied.map((t) => t.state).sort());
   });
 
   it('matches the .adlc test-contract fixture exactly', () => {
