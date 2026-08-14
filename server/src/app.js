@@ -2,7 +2,7 @@ import express from 'express';
 import db from '../../src/index.js';
 import { createStatsRouter } from './routes/stats.js';
 import { createIncidentsRouter } from './routes/incidents.js';
-import componentsRouter from '../routes/components.js';
+import componentsRouter from '../../src/routes/componentsRoutes.js';
 import healthRouter from '../routes/health.js';
 
 const app = express();
