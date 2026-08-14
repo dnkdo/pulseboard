@@ -1,0 +1,26 @@
+[
+  {
+    "id": "seed-comp-api",
+    "name": "Core API",
+    "description": "Primary REST API gateway serving client and server workspaces.",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-web",
+    "name": "Public Status Page",
+    "description": "Customer-facing status page and incident banner.",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-db",
+    "name": "Primary Database",
+    "description": "Primary relational datastore backing incidents and components.",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "seed-comp-auth",
+    "name": "Authentication Service",
+    "description": "Login, session management, and token issuance.",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  }
+]

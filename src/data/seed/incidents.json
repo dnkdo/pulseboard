@@ -1,0 +1,82 @@
+[
+  {
+    "id": "seed-inc-1",
+    "title": "Elevated API latency on core endpoints",
+    "description": "p99 latency on the Core API is elevated above SLO.",
+    "severity": "SEV1",
+    "state": "open",
+    "component_id": "seed-comp-api",
+    "created_at": "2026-01-02T09:00:00.000Z",
+    "updated_at": "2026-01-02T09:00:00.000Z"
+  },
+  {
+    "id": "seed-inc-2",
+    "title": "Intermittent 500s on incident creation",
+    "description": "A subset of POST /api/incidents requests are failing with 500 errors.",
+    "severity": "SEV2",
+    "state": "investigating",
+    "component_id": "seed-comp-api",
+    "created_at": "2026-01-03T10:15:00.000Z",
+    "updated_at": "2026-01-03T10:45:00.000Z"
+  },
+  {
+    "id": "seed-inc-3",
+    "title": "Status page banner not refreshing",
+    "description": "Root cause identified as a stale client-side polling interval.",
+    "severity": "SEV3",
+    "state": "identified",
+    "component_id": "seed-comp-web",
+    "created_at": "2026-01-04T08:30:00.000Z",
+    "updated_at": "2026-01-04T09:10:00.000Z"
+  },
+  {
+    "id": "seed-inc-4",
+    "title": "Database failover completed successfully",
+    "description": "Primary database failed over to replica; service fully restored.",
+    "severity": "SEV1",
+    "state": "resolved",
+    "component_id": "seed-comp-db",
+    "created_at": "2026-01-05T02:00:00.000Z",
+    "updated_at": "2026-01-05T03:30:00.000Z"
+  },
+  {
+    "id": "seed-inc-5",
+    "title": "Session tokens expiring early",
+    "description": "A misconfigured TTL caused sessions to expire ahead of schedule; fix deployed.",
+    "severity": "SEV2",
+    "state": "resolved",
+    "component_id": "seed-comp-auth",
+    "created_at": "2026-01-06T14:00:00.000Z",
+    "updated_at": "2026-01-06T16:20:00.000Z"
+  },
+  {
+    "id": "seed-inc-6",
+    "title": "Minor visual regression on status page",
+    "description": "Component health tiles render with incorrect spacing on narrow viewports.",
+    "severity": "SEV3",
+    "state": "open",
+    "component_id": "seed-comp-web",
+    "created_at": "2026-01-07T11:00:00.000Z",
+    "updated_at": "2026-01-07T11:00:00.000Z"
+  },
+  {
+    "id": "seed-inc-7",
+    "title": "Replica lag on primary database",
+    "description": "Read replica lag exceeds acceptable threshold during peak load.",
+    "severity": "SEV1",
+    "state": "investigating",
+    "component_id": "seed-comp-db",
+    "created_at": "2026-01-08T13:00:00.000Z",
+    "updated_at": "2026-01-08T13:40:00.000Z"
+  },
+  {
+    "id": "seed-inc-8",
+    "title": "OAuth provider callback errors",
+    "description": "Root cause identified as an expired signing certificate with the OAuth provider.",
+    "severity": "SEV3",
+    "state": "identified",
+    "component_id": "seed-comp-auth",
+    "created_at": "2026-01-09T07:20:00.000Z",
+    "updated_at": "2026-01-09T07:55:00.000Z"
+  }
+]
