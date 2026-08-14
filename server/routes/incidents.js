@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { validateIncident } from '../../src/lib/validateIncident.js';
 import { createIncident, getAllIncidents } from '../store/incidentStore.js';
+import { toCSV, toJSON } from '../utils/exportIncidents.js';
 
 const FIELD_MESSAGES = {
   title: 'title is required',
@@ -22,6 +23,28 @@ function buildValidationErrors(invalidFields) {
 }
 
 const router = Router();
+
+const EXPORT_CONTENT_TYPES = {
+  csv: 'text/csv',
+  json: 'application/json',
+};
+
+// Registered ahead of any future '/:id' route so 'export' is never captured
+// as an incident id. Unrecognized or omitted formats default to JSON.
+router.get('/export', (req, res) => {
+  const { format } = req.query;
+  const requestedFormat = format === undefined ? 'json' : String(format).toLowerCase();
+  const normalizedFormat = Object.prototype.hasOwnProperty.call(EXPORT_CONTENT_TYPES, requestedFormat)
+    ? requestedFormat
+    : 'json';
+
+  const incidents = getAllIncidents();
+  const body = normalizedFormat === 'csv' ? toCSV(incidents) : toJSON(incidents);
+
+  res.set('Content-Type', EXPORT_CONTENT_TYPES[normalizedFormat]);
+  res.set('Content-Disposition', `attachment; filename="incidents.${normalizedFormat}"`);
+  res.status(200).send(body);
+});
 
 router.get('/', (req, res) => {
   res.json(getAllIncidents());
