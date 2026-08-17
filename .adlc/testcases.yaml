@@ -467,3 +467,11 @@ cases:
     export: "toJSON"
     args: [[{ id: 1, title: "API Outage" }]]
     expect: { equals: "[{\"id\":1,\"title\":\"API Outage\"}]" }
+  - name: "covers: filterActiveIncidents returns an empty array when all incidents are resolved"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "PLB-3"
+    module: "src/lib/incidents.js"
+    export: "filterActiveIncidents"
+    args: [[{"id": "1", "status": "resolved", "severity": "critical", "title": "API Down", "timestamp": "2026-01-01T00:00:00Z"}, {"id": "2", "status": "resolved", "severity": "major", "title": "Database Lag", "timestamp": "2026-01-02T00:00:00Z"}]]
+    expect: { equals: [] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
