@@ -491,3 +491,11 @@ cases:
     export: "sortPastIncidentsDesc"
     args: [[{"title": "A", "status": "resolved", "resolvedAt": "2026-08-15T10:00:00Z"}, {"title": "B", "status": "investigating", "resolvedAt": "2026-08-16T10:00:00Z"}, {"title": "C", "status": "resolved", "resolvedAt": "2026-08-17T10:00:00Z"}, {"title": "D", "status": "resolved", "resolvedAt": "2026-08-14T10:00:00Z"}]]
     expect: { equals: [{'title': 'C', 'status': 'resolved', 'resolvedAt': '2026-08-17T10:00:00Z'}, {'title': 'A', 'status': 'resolved', 'resolvedAt': '2026-08-15T10:00:00Z'}, {'title': 'D', 'status': 'resolved', 'resolvedAt': '2026-08-14T10:00:00Z'}] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Unresolved incidents are excluded from the past incidents list"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-3"
+    module: "src/lib/incidents.js"
+    export: "sortPastIncidentsDesc"
+    args: [[{"id": 1, "status": "investigating", "title": "Unresolved", "resolvedAt": null}, {"id": 2, "status": "resolved", "title": "Resolved A", "resolvedAt": "2026-08-15T10:00:00Z"}, {"id": 3, "status": "monitoring", "title": "Another unresolved", "resolvedAt": null}, {"id": 4, "status": "resolved", "title": "Resolved B", "resolvedAt": "2026-08-16T10:00:00Z"}]]
+    expect: { equals: [{'id': 4, 'status': 'resolved', 'title': 'Resolved B', 'resolvedAt': '2026-08-16T10:00:00Z'}, {'id': 2, 'status': 'resolved', 'title': 'Resolved A', 'resolvedAt': '2026-08-15T10:00:00Z'}] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
