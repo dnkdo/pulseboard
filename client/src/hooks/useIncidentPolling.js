@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
-import { filterActiveIncidents } from '../../../src/lib/incidents.js';
+import { filterActiveIncidents, sortPastIncidentsDesc } from '../../../src/lib/incidents.js';
 import { fetchIncidents } from '../lib/api/incidents.js';
 
 const DEFAULT_POLL_INTERVAL_MS = 30000;
 
 // Polls GET /api/incidents (via fetchIncidents, injectable as fetchImpl for
-// tests) and re-derives the active list on every tick. Once the API flips an
-// incident's status to 'resolved', the next tick's filterActiveIncidents
-// call naturally drops it and React re-renders without it — no manual
-// publish/refresh action, and no separate 'published' flag involved.
+// tests) and re-derives both the active and past lists from the same fetch
+// on every tick, so the two status-page sections share one poll cycle
+// instead of double-fetching. Once the API flips an incident's status to
+// 'resolved', the next tick naturally moves it from activeIncidents to
+// pastIncidents and React re-renders without it — no manual publish/refresh
+// action, and no separate 'published' flag involved.
 export function useIncidentPolling({ pollIntervalMs = DEFAULT_POLL_INTERVAL_MS, fetchImpl = fetchIncidents } = {}) {
-  const [state, setState] = useState({ activeIncidents: [], isLoading: true, error: null });
+  const [state, setState] = useState({ activeIncidents: [], pastIncidents: [], isLoading: true, error: null });
 
   useEffect(() => {
     let cancelled = false;
@@ -19,7 +21,12 @@ export function useIncidentPolling({ pollIntervalMs = DEFAULT_POLL_INTERVAL_MS, 
       try {
         const incidents = await fetchImpl();
         if (!cancelled) {
-          setState({ activeIncidents: filterActiveIncidents(incidents), isLoading: false, error: null });
+          setState({
+            activeIncidents: filterActiveIncidents(incidents),
+            pastIncidents: sortPastIncidentsDesc(incidents),
+            isLoading: false,
+            error: null,
+          });
         }
       } catch (error) {
         if (!cancelled) {

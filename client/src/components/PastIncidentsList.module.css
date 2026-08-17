@@ -1,0 +1,40 @@
+/* Public status page (light theme) — past incidents table, per DESIGN.md's
+   Tables (Timeline, Past Incidents) rules and layout pattern 5
+   ("h3 header + reverse-chronological list"). */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.header {
+  padding: 12px 16px; /* Tables: 12px vertical, 16px horizontal */
+  font-size: 12px; /* typography.body-sm */
+  font-weight: 400; /* typography.body-sm weight */
+  color: #94a3b8; /* text-muted-light */
+  background-color: #f8fafc; /* surface-secondary-light */
+  border-top: 1px solid #e2e8f0; /* border-light */
+  text-align: left;
+}
+
+.row:nth-child(even) {
+  background-color: #f8fafc; /* surface-secondary-light — alternating shift for scannability */
+}
+
+.cell {
+  padding: 12px 16px; /* Tables: 12px vertical, 16px horizontal */
+  font-size: 14px; /* typography.body-md */
+  color: #1e293b; /* text-primary-light */
+}
+
+.severityDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%; /* Tables: severity indicator, colored circle on left edge */
+  margin-right: 8px; /* spacing: 8 */
+}
+
+.message {
+  font-size: 14px; /* typography.body-md */
+  color: #475569; /* text-secondary-light */
+}

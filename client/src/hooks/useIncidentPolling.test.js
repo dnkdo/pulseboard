@@ -56,6 +56,46 @@ describe('useIncidentPolling', () => {
     expect(result.current.activeIncidents).toEqual([]);
   });
 
+  it('derives pastIncidents (resolved, newest-first) from the same fetch as activeIncidents', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue([
+      { id: '1', status: 'resolved', severity: 'SEV2', resolvedAt: '2026-08-10T00:00:00Z' },
+      { id: '2', status: 'open', severity: 'SEV1', resolvedAt: null },
+      { id: '3', status: 'resolved', severity: 'SEV3', resolvedAt: '2026-08-15T00:00:00Z' },
+    ]);
+
+    const { result } = renderHook(() => useIncidentPolling({ fetchImpl }));
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(result.current.pastIncidents.map((incident) => incident.id)).toEqual(['3', '1']);
+    expect(result.current.activeIncidents.map((incident) => incident.id)).toEqual(['2']);
+  });
+
+  it('AC: a resolved incident moves from activeIncidents into pastIncidents on the next poll tick', async () => {
+    vi.useFakeTimers();
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce([{ id: '1', status: 'open', severity: 'SEV1', resolvedAt: null }])
+      .mockResolvedValueOnce([
+        { id: '1', status: 'resolved', severity: 'SEV1', resolvedAt: '2026-08-17T00:00:00Z' },
+      ]);
+
+    const { result } = renderHook(() => useIncidentPolling({ pollIntervalMs: 10000, fetchImpl }));
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(result.current.activeIncidents).toHaveLength(1);
+    expect(result.current.pastIncidents).toEqual([]);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+
+    expect(result.current.activeIncidents).toEqual([]);
+    expect(result.current.pastIncidents.map((incident) => incident.id)).toEqual(['1']);
+  });
+
   it('stops polling after unmount', async () => {
     vi.useFakeTimers();
     const fetchImpl = vi.fn().mockResolvedValue([]);

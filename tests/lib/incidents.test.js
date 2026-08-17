@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { filterActiveIncidents } from '../../src/lib/incidents.js';
+import { filterActiveIncidents, sortPastIncidentsDesc } from '../../src/lib/incidents.js';
 
 describe('filterActiveIncidents', () => {
   it('AC: returns an empty array when all incidents are resolved', () => {
@@ -74,5 +74,84 @@ describe('filterActiveIncidents', () => {
   it('returns [] instead of throwing for non-array input', () => {
     expect(filterActiveIncidents(null)).toEqual([]);
     expect(filterActiveIncidents(undefined)).toEqual([]);
+  });
+});
+
+describe('sortPastIncidentsDesc', () => {
+  it('AC: returns resolved incidents ordered from most recently resolved to least recently resolved', () => {
+    const result = sortPastIncidentsDesc([
+      { title: 'A', status: 'resolved', resolvedAt: '2026-08-15T10:00:00Z' },
+      { title: 'B', status: 'investigating', resolvedAt: '2026-08-16T10:00:00Z' },
+      { title: 'C', status: 'resolved', resolvedAt: '2026-08-17T10:00:00Z' },
+      { title: 'D', status: 'resolved', resolvedAt: '2026-08-14T10:00:00Z' },
+    ]);
+
+    expect(result).toEqual([
+      { title: 'C', status: 'resolved', resolvedAt: '2026-08-17T10:00:00Z' },
+      { title: 'A', status: 'resolved', resolvedAt: '2026-08-15T10:00:00Z' },
+      { title: 'D', status: 'resolved', resolvedAt: '2026-08-14T10:00:00Z' },
+    ]);
+  });
+
+  it('AC: excludes unresolved incidents (open, investigating, identified) from the result', () => {
+    const result = sortPastIncidentsDesc([
+      { id: 1, status: 'investigating', title: 'Unresolved', resolvedAt: null },
+      { id: 2, status: 'resolved', title: 'Resolved A', resolvedAt: '2026-08-15T10:00:00Z' },
+      { id: 3, status: 'monitoring', title: 'Another unresolved', resolvedAt: null },
+      { id: 4, status: 'resolved', title: 'Resolved B', resolvedAt: '2026-08-16T10:00:00Z' },
+      { id: 5, status: 'open', title: 'Open incident', resolvedAt: null },
+      { id: 6, status: 'identified', title: 'Identified incident', resolvedAt: null },
+    ]);
+
+    expect(result).toEqual([
+      { id: 4, status: 'resolved', title: 'Resolved B', resolvedAt: '2026-08-16T10:00:00Z' },
+      { id: 2, status: 'resolved', title: 'Resolved A', resolvedAt: '2026-08-15T10:00:00Z' },
+    ]);
+  });
+
+  it('returns an empty array when no incidents are resolved', () => {
+    expect(sortPastIncidentsDesc([{ id: '1', status: 'open', resolvedAt: '2026-08-01T00:00:00Z' }])).toEqual([]);
+  });
+
+  it('returns an empty array for empty input', () => {
+    expect(sortPastIncidentsDesc([])).toEqual([]);
+  });
+
+  it('returns [] instead of throwing for non-array input', () => {
+    expect(sortPastIncidentsDesc(null)).toEqual([]);
+    expect(sortPastIncidentsDesc(undefined)).toEqual([]);
+  });
+
+  it('does not mutate the input array or its elements', () => {
+    const incident1 = { id: '1', status: 'resolved', resolvedAt: '2026-08-01T00:00:00Z' };
+    const incident2 = { id: '2', status: 'resolved', resolvedAt: '2026-08-10T00:00:00Z' };
+    const input = [incident1, incident2];
+    const inputCopy = [...input];
+
+    const result = sortPastIncidentsDesc(input);
+
+    expect(input).toEqual(inputCopy);
+    expect(input[0]).toBe(incident1);
+    expect(input[1]).toBe(incident2);
+    expect(result).not.toBe(input);
+  });
+
+  it('treats ties in resolvedAt by preserving original relative order (stable sort)', () => {
+    const first = { id: '1', status: 'resolved', resolvedAt: '2026-08-10T00:00:00Z' };
+    const second = { id: '2', status: 'resolved', resolvedAt: '2026-08-10T00:00:00Z' };
+    expect(sortPastIncidentsDesc([first, second])).toEqual([first, second]);
+  });
+
+  it('pushes resolved incidents with missing or malformed resolvedAt to the end instead of throwing', () => {
+    const valid = { id: '1', status: 'resolved', resolvedAt: '2026-08-10T00:00:00Z' };
+    const missing = { id: '2', status: 'resolved', resolvedAt: null };
+    const malformed = { id: '3', status: 'resolved', resolvedAt: 'not-a-date' };
+    const undefinedField = { id: '4', status: 'resolved' };
+
+    const result = sortPastIncidentsDesc([missing, malformed, valid, undefinedField]);
+
+    expect(result[0]).toBe(valid);
+    expect(result).toHaveLength(4);
+    expect(result.slice(1).map((incident) => incident.id).sort()).toEqual(['2', '3', '4']);
   });
 });
