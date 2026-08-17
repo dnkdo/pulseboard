@@ -27,7 +27,7 @@ export default function ComponentHealthGrid({ pollIntervalMs, fetchImpl = fetchC
   }
 
   return (
-    <div className={styles.grid}>
+    <div className={styles.grid} data-testid="component-health-grid">
       {components.map((component) => (
         <HealthTile
           key={component.id}

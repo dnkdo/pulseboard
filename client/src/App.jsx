@@ -1,14 +1,13 @@
-import StatusPage from './status-page/StatusPage.jsx';
-import StatCardsDashboard from './dashboard';
-import IncidentList from './dashboard/incidentList.js';
+import { BrowserRouter } from 'react-router-dom';
+import AppRoutes from './routes/index.jsx';
 
 function App() {
   return (
     <div className="flex flex-col p-4">
       <h1>Pulseboard</h1>
-      <StatCardsDashboard />
-      <IncidentList />
-      <StatusPage />
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </div>
   );
 }
