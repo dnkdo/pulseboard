@@ -46,4 +46,27 @@ export function filterActiveIncidents(incidents) {
     .sort((a, b) => severityRank(b?.severity) - severityRank(a?.severity));
 }
 
+function isResolvedIncident(incident) {
+  return incident?.status === 'resolved';
+}
+
+// Invalid/missing resolvedAt (Date.parse -> NaN) sorts to the end rather
+// than throwing or corrupting the comparator, since the API may send
+// partial data.
+function resolvedAtRank(incident) {
+  const time = Date.parse(incident?.resolvedAt);
+  return Number.isNaN(time) ? -Infinity : time;
+}
+
+// Returns a new array — never mutates `incidents` or its elements — of the
+// resolved incidents (the public status page's "past incidents" section),
+// ordered by resolvedAt descending (most recently resolved first).
+export function sortPastIncidentsDesc(incidents) {
+  if (!Array.isArray(incidents)) {
+    return [];
+  }
+
+  return incidents.filter(isResolvedIncident).sort((a, b) => resolvedAtRank(b) - resolvedAtRank(a));
+}
+
 export default filterActiveIncidents;

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import StatusPage from './StatusPage.jsx';
 import { fetchComponents } from '../lib/api/components.js';
@@ -43,6 +43,37 @@ describe('StatusPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Active Incidents' })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('API Down')).toBeInTheDocument());
-    expect(screen.queryByText('Old Outage')).not.toBeInTheDocument();
+    expect(within(screen.getByTestId('active-incidents-list')).queryByText('Old Outage')).not.toBeInTheDocument();
+  });
+
+  it('AC: wires the past incidents list in, showing only resolved incidents in reverse-chronological order', async () => {
+    fetchComponents.mockResolvedValue([]);
+    fetchIncidents.mockResolvedValue([
+      { id: '1', title: 'API Down', status: 'open', severity: 'SEV1', resolvedAt: null },
+      {
+        id: '2',
+        title: 'Older Resolved Outage',
+        status: 'resolved',
+        severity: 'SEV2',
+        resolvedAt: '2026-01-02T00:00:00Z',
+      },
+      {
+        id: '3',
+        title: 'Newer Resolved Outage',
+        status: 'resolved',
+        severity: 'SEV3',
+        resolvedAt: '2026-01-10T00:00:00Z',
+      },
+    ]);
+
+    render(<StatusPage />);
+
+    expect(screen.getByRole('heading', { name: 'Past Incidents' })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByTestId('past-incident-row')).toHaveLength(2));
+
+    const rowTitles = screen.getAllByTestId('past-incident-row').map((row) => row.textContent);
+    expect(rowTitles[0]).toContain('Newer Resolved Outage');
+    expect(rowTitles[1]).toContain('Older Resolved Outage');
+    expect(within(screen.getByTestId('past-incidents-list')).queryByText('API Down')).not.toBeInTheDocument();
   });
 });
