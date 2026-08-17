@@ -1,45 +1,24 @@
-import { useEffect, useState } from 'react';
 import styles from './ComponentHealthGrid.module.css';
 import HealthTile from './HealthTile.jsx';
 import { fetchComponents } from '../lib/api/components.js';
+import { useStatusPolling } from '../hooks/useStatusPolling.js';
 
-const POLL_INTERVAL_MS = 30000;
+// Polls GET /api/components (via fetchComponents, injectable as fetchImpl
+// for tests) through the shared useStatusPolling primitive, mirroring
+// ActiveIncidentsList/PastIncidentsList's use of useIncidentPolling. State
+// only updates when the payload actually differs from the last poll, so a
+// component's health tile updates the next tick after its healthState
+// changes with no manual refresh, and identical consecutive polls don't
+// re-render the grid.
+export default function ComponentHealthGrid({ pollIntervalMs, fetchImpl = fetchComponents }) {
+  const { data, status } = useStatusPolling({ fetchImpl, pollIntervalMs });
+  const components = data ?? [];
 
-export default function ComponentHealthGrid() {
-  const [components, setComponents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const data = await fetchComponents();
-        if (cancelled) return;
-        setComponents(data);
-        setError(null);
-      } catch (err) {
-        if (!cancelled) setError(err);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    load();
-    const intervalId = setInterval(load, POLL_INTERVAL_MS);
-
-    return () => {
-      cancelled = true;
-      clearInterval(intervalId);
-    };
-  }, []);
-
-  if (loading) {
+  if (status === 'loading') {
     return <p className={styles.message}>Loading component status…</p>;
   }
 
-  if (error) {
+  if (status === 'error') {
     return (
       <p role="alert" className={styles.message}>
         Unable to load component status.
