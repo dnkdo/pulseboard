@@ -26,7 +26,7 @@ describe('fetchStatusSnapshot', () => {
     });
 
     await expect(fetchStatusSnapshot()).resolves.toEqual({
-      incidents: [{ id: '1', status: 'open' }],
+      incidents: [{ id: '1', status: 'open', resolvedAt: null }],
       components: [{ id: 'api', healthState: 'operational' }],
     });
     expect(global.fetch).toHaveBeenCalledWith('/api/incidents');

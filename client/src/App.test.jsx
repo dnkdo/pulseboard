@@ -11,6 +11,7 @@ describe('client vitest environment', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     delete global.fetch;
+    window.history.pushState({}, '', '/');
   });
 
   it('exposes a real DOM (document/window) because the test environment is jsdom, not node', () => {
@@ -19,7 +20,7 @@ describe('client vitest environment', () => {
     expect(document.createElement('div')).toBeInstanceOf(window.HTMLElement);
   });
 
-  it('mounts the App component, renders the status page and the stat cards dashboard', async () => {
+  it('mounts the App component at "/" and renders the stat cards dashboard, not the public status page', async () => {
     global.fetch = vi.fn((url) => {
       if (url === '/api/stats') {
         return Promise.resolve({
@@ -39,10 +40,34 @@ describe('client vitest environment', () => {
     });
 
     expect(container.textContent).toContain('Pulseboard');
-    expect(container.textContent).toContain('Component Status');
     expect(global.fetch).toHaveBeenCalledWith('/api/stats');
     expect(container.querySelector('[data-testid="stat-cards"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="stat-value-openIncidents"]').textContent).toBe('1');
+    // The internal dashboard route ("/") must not also render the public
+    // status page — that lives at its own route, "/status" (PLB-78).
+    expect(container.querySelector('[data-testid="status-banner"]')).toBeNull();
+
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('mounts the App component at "/status" and renders the public status page, not the internal dashboard', async () => {
+    global.fetch = vi.fn(() => Promise.resolve({ ok: true, json: async () => [] }));
+    window.history.pushState({}, '', '/status');
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    expect(container.textContent).toContain('Pulseboard');
+    expect(container.querySelector('[data-testid="status-banner"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="stat-cards"]')).toBeNull();
 
     act(() => {
       root.unmount();
