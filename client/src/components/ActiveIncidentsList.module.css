@@ -1,0 +1,12 @@
+/* Public status page (light theme) — active incidents stack, per DESIGN.md
+   layout pattern 4 ("one card per unresolved incident"). */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* spacing: 16 (card/section gaps) */
+}
+
+.message {
+  font-size: 14px; /* typography.body-md */
+  color: #475569; /* text-secondary-light */
+}

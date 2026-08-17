@@ -467,3 +467,19 @@ cases:
     export: "toJSON"
     args: [[{ id: 1, title: "API Outage" }]]
     expect: { equals: "[{\"id\":1,\"title\":\"API Outage\"}]" }
+  - name: "covers: filterActiveIncidents returns an empty array when all incidents are resolved"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "PLB-3"
+    module: "src/lib/incidents.js"
+    export: "filterActiveIncidents"
+    args: [[{"id": "1", "status": "resolved", "severity": "critical", "title": "API Down", "timestamp": "2026-01-01T00:00:00Z"}, {"id": "2", "status": "resolved", "severity": "major", "title": "Database Lag", "timestamp": "2026-01-02T00:00:00Z"}]]
+    expect: { equals: [] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: filterActiveIncidents returns only incidents whose status is not 'resolved', ordered by severity"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "PLB-3"
+    module: "src/lib/incidents.js"
+    export: "filterActiveIncidents"
+    args: [[{"id": "1", "title": "Low Priority Issue", "status": "active", "severity": "low"}, {"id": "2", "title": "Critical Issue Resolved", "status": "resolved", "severity": "critical"}, {"id": "3", "title": "Critical Issue Active", "status": "active", "severity": "critical"}, {"id": "4", "title": "Major Issue", "status": "active", "severity": "major"}, {"id": "5", "title": "Minor Issue", "status": "investigating", "severity": "minor"}]]
+    expect: { equals: [{'id': '3', 'title': 'Critical Issue Active', 'status': 'active', 'severity': 'critical'}, {'id': '4', 'title': 'Major Issue', 'status': 'active', 'severity': 'major'}, {'id': '5', 'title': 'Minor Issue', 'status': 'investigating', 'severity': 'minor'}, {'id': '1', 'title': 'Low Priority Issue', 'status': 'active', 'severity': 'low'}] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
