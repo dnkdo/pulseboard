@@ -595,3 +595,11 @@ cases:
     export: "isValidTransition"
     args: ["open", "identified"]
     expect: { equals: false }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Incidents in any non-resolved state are classified as active"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "PLB-5"
+    module: "src/lib/incidentPartition.js"
+    export: "partitionIncidents"
+    args: [[{"id": "inc-1", "status": "investigating"}]]
+    expect: { equals: {'active': [{'id': 'inc-1', 'status': 'investigating'}], 'past': []} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
