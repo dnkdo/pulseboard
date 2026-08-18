@@ -1,6 +1,7 @@
 import { useIncidentFilter } from '../../state/IncidentFilterContext.jsx';
 import { getStateChipProps } from './stateChips.js';
 import { chipStyle } from './Chip.styles.js';
+import { IncidentStateTransition } from '../IncidentStateTransition.jsx';
 import {
   incidentListContainerStyle,
   incidentListHeaderStyle,
@@ -43,6 +44,7 @@ export function IncidentList() {
             <span data-testid="incident-list-state" style={chipStyle(token)}>
               {label}
             </span>
+            <IncidentStateTransition incident={incident} />
           </div>
         );
       })}
