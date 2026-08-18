@@ -611,3 +611,11 @@ cases:
     export: "partitionIncidents"
     args: [[{"id": "1", "status": "resolved"}]]
     expect: { equals: {'active': [], 'past': [{'id': '1', 'status': 'resolved'}]} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Empty active-incident list returns an 'operational' banner state"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-5"
+    module: "src/lib/bannerStatus.js"
+    export: "computeBannerStatus"
+    args: [[]]
+    expect: { equals: "operational" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
