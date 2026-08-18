@@ -579,3 +579,11 @@ cases:
     export: "scanForViolations"
     args: ["."]
     expect: { equals: [] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Submit button is disabled while any required field is empty"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-5"
+    module: "src/components/IncidentForm.jsx"
+    export: "isFormValid"
+    args: [{"title": "", "severity": "critical", "affectedComponents": ["database"], "summary": "Database service unavailable"}]
+    expect: { equals: false }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
