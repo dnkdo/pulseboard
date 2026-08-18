@@ -63,12 +63,34 @@ describe('PATCH /api/incidents/:id', () => {
     expect(incident.state).toBe('open');
   });
 
-  it('rejects reopening a resolved incident with 400', async () => {
+  it('rejects reopening a resolved incident with 400 and does not mutate the incident', async () => {
     insertIncident(db, { id: 'inc-1', state: 'resolved' });
 
     const res = await request(buildApp(db)).patch('/api/incidents/inc-1').send({ state: 'investigating' });
 
     expect(res.status).toBe(400);
+    const incident = db.prepare('SELECT state FROM incidents WHERE id = ?').get('inc-1');
+    expect(incident.state).toBe('resolved');
+  });
+
+  it('rejects an unknown state value with 400 and does not mutate the incident', async () => {
+    insertIncident(db, { id: 'inc-1', state: 'open' });
+
+    const res = await request(buildApp(db)).patch('/api/incidents/inc-1').send({ state: 'archived' });
+
+    expect(res.status).toBe(400);
+    const incident = db.prepare('SELECT state FROM incidents WHERE id = ?').get('inc-1');
+    expect(incident.state).toBe('open');
+  });
+
+  it('rejects a missing state field with 400 and does not mutate the incident', async () => {
+    insertIncident(db, { id: 'inc-1', state: 'open' });
+
+    const res = await request(buildApp(db)).patch('/api/incidents/inc-1').send({});
+
+    expect(res.status).toBe(400);
+    const incident = db.prepare('SELECT state FROM incidents WHERE id = ?').get('inc-1');
+    expect(incident.state).toBe('open');
   });
 
   it('returns 404 for an incident id that does not exist', async () => {

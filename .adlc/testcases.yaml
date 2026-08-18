@@ -587,3 +587,11 @@ cases:
     export: "isFormValid"
     args: [{"title": "", "severity": "critical", "affectedComponents": ["database"], "summary": "Database service unavailable"}]
     expect: { equals: false }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Attempting to skip a state (e.g. open → identified) returns an API error and leaves state unchanged"
+    kind: "testcase"
+    skill_id: "SKILL_003"
+    epic_key: "PLB-5"
+    module: "src/lib/incidentState.js"
+    export: "isValidTransition"
+    args: ["open", "identified"]
+    expect: { equals: false }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
