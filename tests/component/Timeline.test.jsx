@@ -3,6 +3,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { Timeline } from '../../src/components/dashboard/Timeline.jsx';
 import { SEV1_COLOR, SEV2_COLOR, SEV3_COLOR } from '../../src/theme/tokens.js';
+import { IncidentFilterProvider } from '../../src/state/IncidentFilterContext.jsx';
 
 afterEach(cleanup);
 
@@ -99,5 +100,31 @@ describe('Timeline', () => {
     render(<Timeline fetchImpl={fetchImpl} />);
     await waitFor(() => expect(screen.getByTestId('timeline-error')).toBeTruthy());
     expect(screen.queryAllByTestId('timeline-entry')).toHaveLength(0);
+  });
+
+  it('reads incidents from IncidentFilterContext when no incidents prop is given', () => {
+    render(
+      <IncidentFilterProvider incidents={UNORDERED_INCIDENTS}>
+        <Timeline />
+      </IncidentFilterProvider>
+    );
+
+    const entries = screen.getAllByTestId('timeline-entry');
+    expect(entries).toHaveLength(3);
+    expect(entries.map((entry) => entry.dataset.severity)).toEqual(['SEV1', 'SEV2', 'SEV3']);
+  });
+
+  it('an explicit incidents prop overrides the surrounding IncidentFilterContext', () => {
+    const propIncidents = [{ id: 'prop-only', title: 'From prop', severity: 'SEV2', created_at: '2026-08-10T10:00:00Z' }];
+
+    render(
+      <IncidentFilterProvider incidents={UNORDERED_INCIDENTS}>
+        <Timeline incidents={propIncidents} />
+      </IncidentFilterProvider>
+    );
+
+    const entries = screen.getAllByTestId('timeline-entry');
+    expect(entries).toHaveLength(1);
+    expect(screen.getByText('From prop')).toBeTruthy();
   });
 });

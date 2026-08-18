@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { buildIncidentTimeline } from '../../lib/timeline.js';
 import { getSeverityColor } from './severityColors.js';
+import { IncidentFilterContext } from '../../state/IncidentFilterContext.jsx';
 import {
   timelineContainerStyle,
   timelineHeaderStyle,
@@ -23,21 +24,28 @@ function formatTimestamp(raw) {
 // getSeverityColor and chronologically ordered via buildIncidentTimeline.
 //
 // When `incidents` is passed, the component is purely presentational (easy
-// to unit test). When omitted, it polls GET /api/incidents itself — same
-// injectable-fetchImpl / explicit loading-error-state shape as Chip.jsx's
-// useIncidentStatus, so real dashboard usage doesn't need a separate data
-// layer wired up first.
+// to unit test). When mounted under an IncidentFilterProvider (see
+// src/state/IncidentFilterContext.jsx) and no `incidents` prop is given, it
+// reads `filteredIncidents` from that shared context instead, so selecting a
+// component in ComponentFilterControls updates the timeline in the same
+// render/commit as IncidentList — both derive from the one filter state.
+// When neither an `incidents` prop nor a provider is present, it falls back
+// to polling GET /api/incidents itself — same injectable-fetchImpl /
+// explicit loading-error-state shape as Chip.jsx's useIncidentStatus, so
+// real dashboard usage doesn't need a separate data layer wired up first.
 export function Timeline({ incidents, fetchImpl = fetch }) {
-  const controlled = incidents !== undefined;
+  const filterContext = useContext(IncidentFilterContext);
+  const effectiveIncidents = incidents !== undefined ? incidents : filterContext?.filteredIncidents;
+  const controlled = effectiveIncidents !== undefined;
   const [state, setState] = useState({
-    data: controlled ? incidents : null,
+    data: controlled ? effectiveIncidents : null,
     loading: !controlled,
     error: null,
   });
 
   useEffect(() => {
     if (controlled) {
-      setState({ data: incidents, loading: false, error: null });
+      setState({ data: effectiveIncidents, loading: false, error: null });
       return undefined;
     }
 
@@ -66,7 +74,7 @@ export function Timeline({ incidents, fetchImpl = fetch }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [controlled, incidents, fetchImpl]);
+  }, [controlled, effectiveIncidents, fetchImpl]);
 
   if (state.loading) {
     return (
