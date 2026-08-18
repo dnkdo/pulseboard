@@ -603,3 +603,11 @@ cases:
     export: "partitionIncidents"
     args: [[{"id": "inc-1", "status": "investigating"}]]
     expect: { equals: {'active': [{'id': 'inc-1', 'status': 'investigating'}], 'past': []} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Incidents in resolved state are classified as past and excluded from active"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "PLB-5"
+    module: "src/lib/incidentPartition.js"
+    export: "partitionIncidents"
+    args: [[{"id": "1", "status": "resolved"}]]
+    expect: { equals: {'active': [], 'past': [{'id': '1', 'status': 'resolved'}]} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
