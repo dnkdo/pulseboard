@@ -627,3 +627,11 @@ cases:
     export: "computeBannerStatus"
     args: [[{"severity": "critical"}]]
     expect: { equals: "critical" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Multiple active incidents of differing severity return the highest-severity incident's state, and resolving it r"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-5"
+    module: "src/lib/bannerStatus.js"
+    export: "computeBannerStatus"
+    args: [[{"id": "1", "severity": "minor", "state": "investigating"}, {"id": "2", "severity": "major", "state": "acknowledged"}, {"id": "3", "severity": "critical", "state": "resolving"}]]
+    expect: { equals: "resolving" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
