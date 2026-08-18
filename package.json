@@ -13,6 +13,7 @@
     "test:coverage": "vitest run --coverage",
     "vercel-build": "vercel build",
     "lint": "eslint src client/src server tests --ext .js,.jsx --no-error-on-unmatched-pattern",
+    "audit:severity-colors": "node scripts/audit-severity-colors.js",
     "format": "prettier --write ."
   },
   "dependencies": {

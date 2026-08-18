@@ -20,3 +20,6 @@ jobs:
 
       - name: Run test suite
         run: npm test
+
+      - name: Severity color restriction audit
+        run: npm run audit:severity-colors
