@@ -1,5 +1,5 @@
 import styles from './IncidentCard.module.css';
-import { getIncidentSeverityColor } from './incidentSeverityColors.js';
+import SeverityBadge from './SeverityBadge.jsx';
 import { getIncidentStatusColor } from './incidentStatusColors.js';
 
 function formatTimestamp(raw) {
@@ -28,13 +28,7 @@ export default function IncidentCard({ incident }) {
       <div className={styles.header}>
         <span className={styles.title}>{incident.title ?? 'Untitled incident'}</span>
         <span className={styles.badges}>
-          <span
-            className={styles.badge}
-            data-testid="incident-severity-badge"
-            style={{ backgroundColor: getIncidentSeverityColor(incident.severity) }}
-          >
-            {formatLabel(incident.severity)}
-          </span>
+          <SeverityBadge severity={incident.severity} testId="incident-severity-badge" className={styles.badge} />
           <span
             className={styles.badge}
             data-testid="incident-status-badge"

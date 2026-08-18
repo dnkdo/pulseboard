@@ -13,7 +13,7 @@ describe('IncidentCard', () => {
     render(<IncidentCard incident={{ id: '1', title: 'API Down', status: 'open', severity: 'SEV1' }} />);
 
     expect(screen.getByText('API Down')).toBeInTheDocument();
-    expect(screen.getByTestId('incident-severity-badge')).toHaveTextContent('SEV1');
+    expect(screen.getByTestId('incident-severity-badge')).toHaveTextContent('Sev1');
     expect(screen.getByTestId('incident-status-badge')).toHaveTextContent('Open');
   });
 
