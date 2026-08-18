@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { Chip } from '../../../src/components/dashboard/Chip.jsx';
-import { STATE_INVESTIGATING, STATE_RESOLVED } from '../../../src/theme/tokens.js';
+import { STATE_INVESTIGATING, STATE_RESOLVED, darkTheme } from '../../../src/theme/tokens.js';
 
 afterEach(cleanup);
 
@@ -35,6 +35,21 @@ describe('Chip', () => {
     render(<Chip fetchImpl={fetchImpl} />);
     expect(screen.getByTestId('state-chip-empty')).toBeTruthy();
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('styles the neutral empty-state chip from the shared darkTheme tokens (AC: chip colors sourced from token file)', () => {
+    const fetchImpl = vi.fn(() => jsonResponse({ id: 'inc-1', status: 'open' }));
+    render(<Chip fetchImpl={fetchImpl} />);
+    const chip = screen.getByTestId('state-chip-empty');
+    expect(chip.style.backgroundColor).toBe(hexToRgb(darkTheme.surfaceRaised));
+    expect(chip.style.color).toBe(hexToRgb(darkTheme.textMuted));
+  });
+
+  it('styles an active state chip with white text sourced from darkTheme.textOnColor', async () => {
+    const fetchImpl = vi.fn(() => jsonResponse({ id: 'inc-1', status: 'investigating' }));
+    render(<Chip incidentId="inc-1" fetchImpl={fetchImpl} />);
+    const chip = await screen.findByTestId('state-chip');
+    expect(chip.style.color).toBe(hexToRgb(darkTheme.textOnColor));
   });
 
   it('shows a neutral loading chip before the first fetch resolves', () => {

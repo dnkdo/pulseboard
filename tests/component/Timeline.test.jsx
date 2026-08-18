@@ -2,7 +2,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
 import { Timeline } from '../../src/components/dashboard/Timeline.jsx';
-import { SEV1_COLOR, SEV2_COLOR, SEV3_COLOR } from '../../src/theme/tokens.js';
+import { SEV1_COLOR, SEV2_COLOR, SEV3_COLOR, darkTheme } from '../../src/theme/tokens.js';
 import { IncidentFilterProvider } from '../../src/state/IncidentFilterContext.jsx';
 
 afterEach(cleanup);
@@ -41,6 +41,20 @@ describe('Timeline', () => {
       hexToRgb(SEV2_COLOR),
       hexToRgb(SEV3_COLOR),
     ]);
+  });
+
+  it('styles the container and alternating rows from the shared darkTheme tokens (AC: timeline colors sourced from token file)', () => {
+    render(<Timeline incidents={UNORDERED_INCIDENTS} />);
+    const container = screen.getByTestId('timeline');
+    expect(container.style.backgroundColor).toBe(hexToRgb(darkTheme.surface));
+
+    const entries = screen.getAllByTestId('timeline-entry');
+    // Rows alternate: even index (0) is transparent, odd index (1) shifts to surfaceRaised.
+    expect(entries[0].style.backgroundColor).toBe('transparent');
+    expect(entries[1].style.backgroundColor).toBe(hexToRgb(darkTheme.surfaceRaised));
+
+    const [firstTitle] = screen.getAllByText(/Full outage|Elevated latency|Cosmetic banner glitch/);
+    expect(firstTitle.style.color).toBe(hexToRgb(darkTheme.text));
   });
 
   it('applies the Figma-spec row padding and marker size for spacing consistency (AC: spacing)', () => {
