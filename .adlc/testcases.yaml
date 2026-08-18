@@ -563,3 +563,11 @@ cases:
     export: "darkTheme"
     args: []
     expect: { type: "object" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: isAllowedFileForSeverityColor returns true only for files on the timeline/severity-badge allowlist"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-4"
+    module: "src/lib/severityAudit.js"
+    export: "isAllowedFileForSeverityColor"
+    args: ["client/src/components/SeverityBadge/SeverityBadge.jsx"]
+    expect: { equals: true }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
