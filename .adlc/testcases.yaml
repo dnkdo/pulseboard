@@ -499,3 +499,43 @@ cases:
     export: "sortPastIncidentsDesc"
     args: [[{"id": 1, "status": "investigating", "title": "Unresolved", "resolvedAt": null}, {"id": 2, "status": "resolved", "title": "Resolved A", "resolvedAt": "2026-08-15T10:00:00Z"}, {"id": 3, "status": "monitoring", "title": "Another unresolved", "resolvedAt": null}, {"id": 4, "status": "resolved", "title": "Resolved B", "resolvedAt": "2026-08-16T10:00:00Z"}]]
     expect: { equals: [{'id': 4, 'status': 'resolved', 'title': 'Resolved B', 'resolvedAt': '2026-08-16T10:00:00Z'}, {'id': 2, 'status': 'resolved', 'title': 'Resolved A', 'resolvedAt': '2026-08-15T10:00:00Z'}] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: No SEV1/SEV2/SEV3 color token is applied to any non-severity UI element on the public status page"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-3"
+    module: "client/src/theme/severityAudit.js"
+    export: "validateSeverityTokenUsage"
+    args: [{}]
+    expect: { equals: true }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion. Repointed from the orphaned src/styles/tokens/status-page.tokens.ts (deleted, see PLB-77 fix-iteration commit) to the real module scanning the live client/src public status page tree.
+  - name: "covers: All public status page components use the light-theme token set, not the internal dashboard's dark-theme tokens"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-3"
+    module: "client/src/components/SeverityBadge.jsx"
+    export: "default"
+    args: [{"severity": "SEV1"}]
+    expect: { matches: "Sev1" }  # auto-corrected by spec_autofix (ai_auto_applied)
+  - name: "covers: No SEV1/SEV2/SEV3 color token is applied to any non-severity UI element on the public status page"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-3"
+    module: "tests/theme/severityColorAudit.test.tsx"
+    export: "extractSeverityTokensFromComponent"
+    args: ["Header"]
+    expect: { equals: [] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: No SEV1/SEV2/SEV3 color token is applied to any non-severity UI element on the public status page"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-3"
+    module: "tests/unit/status-page/no-severity-color-leak.test.ts"
+    export: "findSeverityColorViolations"
+    args: ["client/src/components/StatusPage/Header.tsx"]
+    expect: { equals: [] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: All public status page components use the light-theme token set, not the internal dashboard's dark-theme tokens"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-3"
+    module: "tests/theme/status-page-theme-audit.test.ts"
+    export: "getStatusPageDarkThemeImports"
+    args: []
+    expect: { equals: [] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion

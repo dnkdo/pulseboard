@@ -1,0 +1,20 @@
+/* Public status page (light theme) — page header, per DESIGN.md layout
+   pattern 1 ("Header on surface-primary"). */
+.header {
+  padding: 24px 0; /* spacing: 24 (vertical section spacing) */
+  background-color: #ffffff; /* surface-primary-light */
+  border-bottom: 1px solid #e2e8f0; /* border-light */
+}
+
+.title {
+  font-size: 32px; /* typography.h1 */
+  font-weight: 700; /* typography.h1 weight */
+  line-height: 40px; /* typography.h1 line-height */
+  color: #1e293b; /* text-primary-light */
+}
+
+.subtitle {
+  margin-top: 8px; /* spacing: 8 */
+  font-size: 14px; /* typography.body-md */
+  color: #475569; /* text-secondary-light */
+}
