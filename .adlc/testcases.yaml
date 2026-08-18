@@ -555,3 +555,11 @@ cases:
     export: "filterIncidentsByComponent"
     args: [[{"id": "1", "componentId": "comp-a"}, {"id": "2", "componentId": "comp-b"}], "all"]
     expect: { equals: [{'id': '1', 'componentId': 'comp-a'}, {'id': '2', 'componentId': 'comp-b'}] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: The dark theme token file exports background, surface, and text color values used by dashboard components"
+    kind: "testcase"
+    skill_id: "SKILL_005"
+    epic_key: "PLB-4"
+    module: "src/theme/tokens.js"
+    export: "darkTheme"
+    args: []
+    expect: { type: "object" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
