@@ -539,3 +539,19 @@ cases:
     export: "getStatusPageDarkThemeImports"
     args: []
     expect: { equals: [] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: filterIncidentsByComponent returns only incidents referencing the given component ID"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-4"
+    module: "src/lib/filters.js"
+    export: "filterIncidentsByComponent"
+    args: [[{"id": "inc-1", "componentId": "comp-1"}, {"id": "inc-2", "componentId": "comp-2"}, {"id": "inc-3", "componentId": "comp-1"}], "comp-1"]
+    expect: { equals: [{'id': 'inc-1', 'componentId': 'comp-1'}, {'id': 'inc-3', 'componentId': 'comp-1'}] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: filterIncidentsByComponent with an 'all' selector returns the full unfiltered incident list"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-4"
+    module: "src/lib/filters.js"
+    export: "filterIncidentsByComponent"
+    args: [[{"id": "1", "componentId": "comp-a"}, {"id": "2", "componentId": "comp-b"}], "all"]
+    expect: { equals: [{'id': '1', 'componentId': 'comp-a'}, {'id': '2', 'componentId': 'comp-b'}] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
