@@ -42,3 +42,34 @@ export async function getIncidentById(id) {
     transitions: sortTransitionsAscending(incident.transitions),
   };
 }
+
+// Declares a new incident via POST /api/incidents. Accepts the camelCase
+// `affectedComponents` shape used throughout the internal dashboard (see
+// serializeIncident in src/controllers/incidentsController.js) and translates
+// it to the `affected_components` field name the Express route
+// (server/src/routes/incidents.js) actually validates and stores.
+export async function createIncident({ title, severity, affectedComponents, summary }) {
+  const response = await apiFetch('/incidents', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title,
+      severity,
+      affected_components: affectedComponents,
+      summary,
+    }),
+  });
+
+  if (!response.ok) {
+    let message = `Failed to create incident (status ${response.status})`;
+    const body = await response.json().catch(() => null);
+    if (body?.errors) {
+      message = Object.values(body.errors).join(' ');
+    } else if (body?.error) {
+      message = body.error;
+    }
+    throw new ApiError(message, response.status);
+  }
+
+  return response.json();
+}

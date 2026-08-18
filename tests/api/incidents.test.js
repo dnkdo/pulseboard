@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getIncidentById } from '../../src/api/incidents.js';
+import { getIncidentById, createIncident } from '../../src/api/incidents.js';
 import { ApiError } from '../../src/api/httpClient.js';
 
 function jsonResponse(body, { status = 200, ok = true } = {}) {
@@ -105,5 +105,83 @@ describe('getIncidentById', () => {
     const result = await getIncidentById('inc-2');
 
     expect(result.transitions.map((t) => t.state)).toEqual(['open', 'investigating', 'identified']);
+  });
+});
+
+describe('createIncident', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('POSTs to /incidents translating affectedComponents to affected_components', async () => {
+    const created = { id: 'inc-99', title: 'API latency spike' };
+    fetch.mockResolvedValueOnce(jsonResponse(created, { status: 201 }));
+
+    const result = await createIncident({
+      title: 'API latency spike',
+      severity: 'SEV2',
+      affectedComponents: ['comp-api'],
+      summary: 'Elevated p99 latency',
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/incidents'),
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          title: 'API latency spike',
+          severity: 'SEV2',
+          affected_components: ['comp-api'],
+          summary: 'Elevated p99 latency',
+        }),
+      }),
+    );
+    expect(result).toEqual(created);
+  });
+
+  it('throws an ApiError built from the response body errors on a 400', async () => {
+    fetch.mockResolvedValueOnce(
+      jsonResponse(
+        { errors: { title: 'title is required', summary: 'summary is required' } },
+        { status: 400, ok: false },
+      ),
+    );
+
+    await expect(
+      createIncident({ title: '', severity: 'SEV1', affectedComponents: ['api'], summary: '' }),
+    ).rejects.toThrow('title is required summary is required');
+  });
+
+  it('throws an ApiError using the response body error string when present', async () => {
+    fetch.mockResolvedValueOnce(jsonResponse({ error: 'Internal failure' }, { status: 500, ok: false }));
+
+    await expect(
+      createIncident({ title: 'x', severity: 'SEV1', affectedComponents: ['api'], summary: 'y' }),
+    ).rejects.toThrow('Internal failure');
+  });
+
+  it('falls back to a generic message when a non-2xx response has no JSON body', async () => {
+    fetch.mockResolvedValueOnce({
+      status: 502,
+      ok: false,
+      json: () => Promise.reject(new Error('not json')),
+    });
+
+    await expect(
+      createIncident({ title: 'x', severity: 'SEV1', affectedComponents: ['api'], summary: 'y' }),
+    ).rejects.toThrow('Failed to create incident (status 502)');
+  });
+
+  it('normalizes a network failure into a catchable ApiError', async () => {
+    fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    await expect(
+      createIncident({ title: 'x', severity: 'SEV1', affectedComponents: ['api'], summary: 'y' }),
+    ).rejects.toThrow(ApiError);
   });
 });
