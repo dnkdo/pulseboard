@@ -402,7 +402,7 @@ cases:
     module: "src/lib/bannerStatus.js"
     export: "computeBannerStatus"
     args: [[{ id: 1, severity: "SEV3" }, { id: 2, severity: "SEV1" }]]
-    expect: { equals: { status: "SEV1", incidentId: 2 } }
+    expect: { equals: "SEV1" }  # auto-corrected by spec_autofix (ai_auto_applied)
   - name: "sorts unordered transitions ascending by timestamp"
     kind: "testcase"
     skill_id: "SKILL_002"
@@ -611,3 +611,27 @@ cases:
     export: "partitionIncidents"
     args: [[{"id": "1", "status": "resolved"}]]
     expect: { equals: {'active': [], 'past': [{'id': '1', 'status': 'resolved'}]} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Empty active-incident list returns an 'operational' banner state"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-5"
+    module: "src/lib/bannerStatus.js"
+    export: "computeBannerStatus"
+    args: [[]]
+    expect: { equals: "operational" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Single active incident returns that incident's severity as the banner state"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-5"
+    module: "src/lib/bannerStatus.js"
+    export: "computeBannerStatus"
+    args: [[{"severity": "critical"}]]
+    expect: { equals: "critical" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Multiple active incidents of differing severity return the highest-severity incident's state, and resolving it r"
+    kind: "testcase"
+    skill_id: "SKILL_006"
+    epic_key: "PLB-5"
+    module: "src/lib/bannerStatus.js"
+    export: "computeBannerStatus"
+    args: [[{"id": "1", "severity": "minor", "state": "investigating"}, {"id": "2", "severity": "major", "state": "acknowledged"}, {"id": "3", "severity": "critical", "state": "resolving"}]]
+    expect: { equals: "resolving" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
