@@ -19,7 +19,10 @@ function deriveResolvedAt(incident) {
   return resolvedEntry?.timestamp ?? null;
 }
 
-function normalizeIncident(incident) {
+// Exported so integration tests can reuse this exact server-shape-to-client-shape
+// seam (rather than re-deriving `.status`/`.resolvedAt` themselves) when asserting
+// on the public status page's data source.
+export function normalizeIncident(incident) {
   return {
     ...incident,
     status: incident.status ?? incident.state ?? null,
