@@ -40,3 +40,24 @@ export async function fetchIncidents() {
   const data = await response.json();
   return data.map(normalizeIncident);
 }
+
+// GET /api/incidents/:id (src/controllers/incidentsController.js) returns
+// the full internal incident record — no public-field filtering — with
+// `state`/`stateHistory` in the same server shape fetchIncidents normalizes
+// above, so this goes through the same seam. Returns null on 404 rather
+// than throwing, so callers (IncidentDetailPage) can distinguish "no such
+// incident" from a network/server failure without parsing error bodies.
+export async function getIncidentById(id) {
+  const response = await fetch(`/api/incidents/${id}`);
+
+  if (response.status === 404) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch incident ${id}: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return normalizeIncident(data);
+}

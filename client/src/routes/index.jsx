@@ -3,6 +3,7 @@ import StatusPage from '../status-page/StatusPage.jsx';
 import StatCardsDashboard from '../dashboard';
 import IncidentList from '../dashboard/incidentList.js';
 import TimelineContainer from '../components/timeline/TimelineContainer.jsx';
+import IncidentDetailPage from '../pages/IncidentDetailPage.jsx';
 
 // Internal dashboard shell at "/" — stat cards + incident list (unchanged
 // from the pre-routing App.jsx layout) plus the filterable incident timeline
@@ -29,6 +30,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/status" element={<StatusPage />} />
+      <Route path="/incidents/:incidentId" element={<IncidentDetailPage />} />
     </Routes>
   );
 }
