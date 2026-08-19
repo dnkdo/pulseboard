@@ -739,3 +739,19 @@ cases:
     export: "TransitionHistory"
     args: [{"transitions": []}]
     expect: { contains: "No transitions recorded yet" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Schema module exports the exact set of 3 severities (SEV1, SEV2, SEV3)"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "PLB-2"
+    module: "src/models/schema.js"
+    export: "SEVERITIES"
+    args: []
+    expect: { equals: ['SEV1', 'SEV2', 'SEV3'] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Schema module exports the exact set of 4 incident states (open, investigating, identified, resolved) in workflow"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "PLB-2"
+    module: "src/models/schema.js"
+    export: "INCIDENT_STATES"
+    args: []
+    expect: { equals: ['open', 'investigating', 'identified', 'resolved'] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
