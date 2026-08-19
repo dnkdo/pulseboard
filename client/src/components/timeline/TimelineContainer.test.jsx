@@ -129,4 +129,71 @@ describe('TimelineContainer', () => {
 
     await waitFor(() => expect(screen.getByTestId('incident-timeline-error')).toBeInTheDocument());
   });
+
+  describe('export (PLB-105)', () => {
+    it('AC3: exports using the currently active severity and date-range filters, not a stale snapshot', async () => {
+      const fetchImpl = makeFetchImpl();
+      const exportImpl = vi.fn().mockResolvedValue({ filename: 'incident-history-export.csv', format: 'csv' });
+      renderContainer({ fetchImpl, exportImpl });
+      await waitFor(() => expect(entryIds()).toHaveLength(3));
+
+      fireEvent.change(screen.getByTestId('severity-dropdown'), { target: { value: 'SEV1' } });
+      await waitFor(() => expect(entryIds()).toHaveLength(2));
+      fireEvent.change(screen.getByTestId('date-range-start'), { target: { value: '2026-08-02' } });
+      await waitFor(() => expect(entryIds()).toHaveLength(1));
+
+      fireEvent.click(screen.getByTestId('export-menu-trigger'));
+      fireEvent.click(screen.getByTestId('export-menu-option-csv'));
+
+      await waitFor(() => expect(exportImpl).toHaveBeenCalledTimes(1));
+      expect(exportImpl).toHaveBeenCalledWith({
+        format: 'csv',
+        severity: 'SEV1',
+        startDate: '2026-08-02',
+        endDate: '',
+      });
+    });
+
+    it('AC2: forwards the "json" format when the JSON export option is selected', async () => {
+      const fetchImpl = makeFetchImpl();
+      const exportImpl = vi.fn().mockResolvedValue({ filename: 'incident-history-export.json', format: 'json' });
+      renderContainer({ fetchImpl, exportImpl });
+      await waitFor(() => expect(entryIds()).toHaveLength(3));
+
+      fireEvent.click(screen.getByTestId('export-menu-trigger'));
+      fireEvent.click(screen.getByTestId('export-menu-option-json'));
+
+      await waitFor(() => expect(exportImpl).toHaveBeenCalledWith({ format: 'json', severity: '', startDate: '', endDate: '' }));
+    });
+
+    it('disables the export trigger while the export request is in flight, then re-enables it', async () => {
+      const fetchImpl = makeFetchImpl();
+      let resolveExport;
+      const exportImpl = vi.fn(() => new Promise((resolve) => { resolveExport = resolve; }));
+      renderContainer({ fetchImpl, exportImpl });
+      await waitFor(() => expect(entryIds()).toHaveLength(3));
+
+      fireEvent.click(screen.getByTestId('export-menu-trigger'));
+      fireEvent.click(screen.getByTestId('export-menu-option-csv'));
+
+      await waitFor(() => expect(screen.getByTestId('export-menu-trigger')).toBeDisabled());
+
+      resolveExport({ filename: 'incident-history-export.csv', format: 'csv' });
+
+      await waitFor(() => expect(screen.getByTestId('export-menu-trigger')).not.toBeDisabled());
+    });
+
+    it('surfaces an error message and re-enables the trigger when the export request fails', async () => {
+      const fetchImpl = makeFetchImpl();
+      const exportImpl = vi.fn().mockRejectedValue(new Error('GET /api/incidents/export failed: 500'));
+      renderContainer({ fetchImpl, exportImpl });
+      await waitFor(() => expect(entryIds()).toHaveLength(3));
+
+      fireEvent.click(screen.getByTestId('export-menu-trigger'));
+      fireEvent.click(screen.getByTestId('export-menu-option-csv'));
+
+      await waitFor(() => expect(screen.getByTestId('export-menu-error')).toHaveTextContent('GET /api/incidents/export failed: 500'));
+      expect(screen.getByTestId('export-menu-trigger')).not.toBeDisabled();
+    });
+  });
 });
