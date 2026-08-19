@@ -778,4 +778,4 @@ cases:
     module: "client/package.json"
     export: "devDependencies.vite"
     args: []
-    expect: { type: "string" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+    expect: { equals: "^8.2.1" }  # auto-corrected by spec_autofix (ai_auto_applied)
