@@ -755,3 +755,11 @@ cases:
     export: "INCIDENT_STATES"
     args: []
     expect: { equals: ['open', 'investigating', 'identified', 'resolved'] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Seeding executes automatically on a fresh install/empty database with zero manual setup steps"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-2"
+    module: "server/db/seedLoader.js"
+    export: "loadSeedDataIfEmpty"
+    args: ["freshEmptyDb"]
+    expect: { type: "object" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
