@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom/vitest';
 import TimelineContainer from './TimelineContainer.jsx';
 
@@ -47,10 +48,20 @@ function entryIds() {
   return screen.getAllByTestId(/^incident-timeline-entry-/).map((el) => el.getAttribute('data-testid'));
 }
 
+// IncidentTimeline (rendered by TimelineContainer) renders entries as
+// react-router-dom <Link>s (PLB-98), so every render needs a Router in the tree.
+function renderContainer(props) {
+  return render(
+    <MemoryRouter initialEntries={['/']}>
+      <TimelineContainer {...props} />
+    </MemoryRouter>,
+  );
+}
+
 describe('TimelineContainer', () => {
   it('loads and renders the full unfiltered incident list on mount', async () => {
     const fetchImpl = makeFetchImpl();
-    render(<TimelineContainer fetchImpl={fetchImpl} />);
+    renderContainer({ fetchImpl });
 
     await waitFor(() => expect(entryIds()).toHaveLength(3));
     expect(fetchImpl).toHaveBeenCalledWith('/api/incidents');
@@ -58,7 +69,7 @@ describe('TimelineContainer', () => {
 
   it('AC: selecting a severity re-renders the timeline showing only matching incidents', async () => {
     const fetchImpl = makeFetchImpl();
-    render(<TimelineContainer fetchImpl={fetchImpl} />);
+    renderContainer({ fetchImpl });
     await waitFor(() => expect(entryIds()).toHaveLength(3));
 
     fireEvent.change(screen.getByTestId('severity-dropdown'), { target: { value: 'SEV1' } });
@@ -72,7 +83,7 @@ describe('TimelineContainer', () => {
 
   it('AC: selecting a date range re-renders the timeline showing only matching incidents', async () => {
     const fetchImpl = makeFetchImpl();
-    render(<TimelineContainer fetchImpl={fetchImpl} />);
+    renderContainer({ fetchImpl });
     await waitFor(() => expect(entryIds()).toHaveLength(3));
 
     fireEvent.change(screen.getByTestId('date-range-start'), { target: { value: '2026-08-02' } });
@@ -85,7 +96,7 @@ describe('TimelineContainer', () => {
 
   it('composes severity and date-range filters together (AND semantics)', async () => {
     const fetchImpl = makeFetchImpl();
-    render(<TimelineContainer fetchImpl={fetchImpl} />);
+    renderContainer({ fetchImpl });
     await waitFor(() => expect(entryIds()).toHaveLength(3));
 
     fireEvent.change(screen.getByTestId('severity-dropdown'), { target: { value: 'SEV1' } });
@@ -99,7 +110,7 @@ describe('TimelineContainer', () => {
 
   it('AC: clearing all filters restores the full unfiltered incident list', async () => {
     const fetchImpl = makeFetchImpl();
-    render(<TimelineContainer fetchImpl={fetchImpl} />);
+    renderContainer({ fetchImpl });
     await waitFor(() => expect(entryIds()).toHaveLength(3));
 
     fireEvent.change(screen.getByTestId('severity-dropdown'), { target: { value: 'SEV1' } });
@@ -114,7 +125,7 @@ describe('TimelineContainer', () => {
 
   it('shows an error state and does not crash when the fetch fails', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 500 });
-    render(<TimelineContainer fetchImpl={fetchImpl} />);
+    renderContainer({ fetchImpl });
 
     await waitFor(() => expect(screen.getByTestId('incident-timeline-error')).toBeInTheDocument());
   });

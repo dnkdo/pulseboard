@@ -1,0 +1,23 @@
+/* Internal dashboard (dark theme) only — TimelineContainer is never mounted
+   on the public status page. Hover uses a translucent white wash rather than
+   a literal surface-*-dark hex so it reads correctly against any dark
+   surface it happens to sit on, instead of assuming one fixed token. */
+.entryLink {
+  display: flex;
+  align-items: baseline;
+  gap: 8px; /* spacing: 8 */
+  padding: 8px 0; /* spacing: 8 */
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 4px; /* radius-sm */
+}
+
+.entryLink:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.entryLink:focus-visible {
+  outline: 2px solid #3b82f6; /* investigating blue — DESIGN.md: action buttons/focus */
+  outline-offset: 2px;
+}
