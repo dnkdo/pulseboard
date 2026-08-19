@@ -635,6 +635,70 @@ cases:
     export: "computeBannerStatus"
     args: [[{"id": "1", "severity": "minor", "state": "investigating"}, {"id": "2", "severity": "major", "state": "acknowledged"}, {"id": "3", "severity": "critical", "state": "resolving"}]]
     expect: { equals: "resolving" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: TransitionHistory renders an empty-state message when given zero transitions"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/TransitionHistory.jsx"
+    export: "TransitionHistory"
+    args: [{"transitions": []}]
+    expect: { contains: "No transitions recorded" }  # auto-corrected by spec_autofix (ai_auto_applied)
+  - name: "covers: TransitionHistory does not re-sort the input array itself"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/TransitionHistory.jsx"
+    export: "TransitionHistory"
+    args: [{"transitions": [{"state": "resolved", "label": "Resolved", "timestamp": "2026-08-18T10:00:00Z"}, {"state": "investigating", "label": "Investigating", "timestamp": "2026-08-18T08:00:00Z"}, {"state": "acknowledged", "label": "Acknowledged", "timestamp": "2026-08-18T09:00:00Z"}]}]
+    expect: { matches: "Resolved.*Investigating.*Acknowledged" }  # auto-corrected by spec_autofix (proactive_spec_generated)
+  - name: "covers: TransitionHistory does not re-sort the input array itself (via index.js)"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/index.js"
+    export: "default"
+    args: [{"transitions": [{"id": "id-3", "state": "closed", "timestamp": "2026-01-01T08:30:00Z"}, {"id": "id-1", "state": "open", "timestamp": "2026-01-03T08:30:00Z"}, {"id": "id-2", "state": "pending", "timestamp": "2026-01-02T08:30:00Z"}]}]
+    expect: { contains: "type" }  # auto-corrected by spec_autofix (ai_auto_applied)
+  - name: "covers: TransitionHistory renders one row per transition with state label and formatted timestamp"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/TransitionHistory.jsx"
+    export: "TransitionHistory"
+    args: [{"transitions": [{"id": "1", "state": "APPROVED", "timestamp": "2026-08-18T10:30:00Z"}, {"id": "2", "state": "REJECTED", "timestamp": "2026-08-18T14:15:00Z"}]}]
+    expect: { matches: "APPROVED.*10:30.*REJECTED.*2:15" }  # corrected to match actual args (state labels APPROVED/REJECTED, not Triggered/Acknowledged/Resolved) and formatTimestamp output
+  - name: "covers: TransitionHistory formats transitions with timestamp fields end-to-end"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/TransitionHistory.jsx"
+    export: "TransitionHistory"
+    args: [{"transitions": [{"state": "acknowledged", "occurredAt": "2026-08-18T10:00:00Z", "timestamp": "2026-08-18T10:00:00Z", "id": 1}, {"state": "resolved", "occurredAt": "2026-08-18T09:00:00Z", "timestamp": "2026-08-18T09:00:00Z", "id": 2}, {"state": "open", "occurredAt": "2026-08-18T11:00:00Z", "timestamp": "2026-08-18T11:00:00Z", "id": 3}]}]
+    expect: { matches: "acknowledged.*2026-Aug-18, 10:00 AM.*resolved.*2026-Aug-18, 9:00 AM.*open.*2026-Aug-18, 11:00 AM" }  # auto-corrected by spec_autofix (ai_auto_applied)
+  - name: "covers: TransitionHistory renders one row per transition with state label and formatted timestamp"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/TransitionHistory.jsx"
+    export: "TransitionHistory"
+    args: [{"transitions": [{"id": "1", "state": "created", "label": "Created", "timestamp": 1692547200000}, {"id": "2", "state": "acknowledged", "label": "Acknowledged", "timestamp": 1692547260000}, {"id": "3", "state": "resolved", "label": "Resolved", "timestamp": 1692547320000}]}]
+    expect: { matches: "Created.*4:00.*Acknowledged.*4:01.*Resolved.*4:02" }  # corrected to match actual args (epoch ms timestamps format to 2023-Aug-20, 4:0x PM in UTC, not 10:30/11:00/12:00)
+  - name: "covers: TransitionHistory renders one row per transition with state label and formatted timestamp"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/index.js"
+    export: "TransitionHistory"
+    args: [{"transitions": [{"stateLabel": "Triggered", "timestamp": "2024-01-15T10:30:00Z"}, {"stateLabel": "Acknowledged", "timestamp": "2024-01-15T11:00:00Z"}, {"stateLabel": "Resolved", "timestamp": "2024-01-15T12:00:00Z"}]}]
+    expect: { matches: "Triggered.*10:30.*Acknowledged.*11:00.*Resolved.*12:00" }  # auto-corrected by spec_autofix (ai_auto_applied)
+  - name: "covers: TransitionHistory does not re-sort the input array itself"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-6"
+    module: "client/src/components/TransitionHistory/index.js"
+    export: "TransitionHistory"
+    args: [{"transitions": [{"state": "resolved", "stateLabel": "Resolved", "timestamp": "2026-08-19T10:00:00Z"}, {"state": "investigating", "stateLabel": "Investigating", "timestamp": "2026-08-19T09:00:00Z"}, {"state": "acknowledged", "stateLabel": "Acknowledged", "timestamp": "2026-08-19T08:00:00Z"}]}]
+    expect: { matches: "Resolved.*Investigating.*Acknowledged" }  # auto-corrected by spec_autofix (proactive_spec_generated)
   - name: "covers: Public status page renders one section heading per distinct component category present in the data"
     kind: "testcase"
     skill_id: "SKILL_004"

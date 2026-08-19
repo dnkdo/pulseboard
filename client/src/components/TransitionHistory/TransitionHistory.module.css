@@ -1,0 +1,30 @@
+/* Shared between the dark internal dashboard and the light public status
+   page (DESIGN.md: "Both themes share typography, spacing, and component
+   logic but diverge on surface colors"), so this module intentionally
+   avoids any surface/text color token and inherits color from its caller. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* spacing: 8 */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px; /* spacing: 12 (card internal spacing) */
+  padding: 8px 0; /* spacing: 8 */
+}
+
+.state {
+  font-size: 14px; /* typography.body-md */
+  font-weight: 600;
+}
+
+.timestamp {
+  font-size: 12px; /* typography.body-sm */
+  opacity: 0.75;
+}
