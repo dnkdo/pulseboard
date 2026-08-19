@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import TimelineFilterBar from '../filters/TimelineFilterBar.jsx';
 import IncidentTimeline from './IncidentTimeline.jsx';
+import ExportMenu from '../IncidentHistory/ExportMenu.jsx';
 import { buildFilterQueryString } from '../../utils/buildFilterQueryString.js';
+import { exportIncidentHistory } from '../../services/incidentExportService.js';
 
 const EMPTY_FILTERS = Object.freeze({ severity: '', startDate: '', endDate: '' });
 
@@ -11,11 +13,18 @@ const EMPTY_FILTERS = Object.freeze({ severity: '', startDate: '', endDate: '' }
 // query params buildFilterQueryString serializes — every time a filter
 // changes. Clearing resets to EMPTY_FILTERS, which buildFilterQueryString
 // turns into an empty query string, naturally restoring the full list.
-export default function TimelineContainer({ fetchImpl = fetch }) {
+//
+// ExportMenu (PLB-105) is rendered here too, alongside TimelineFilterBar,
+// rather than in a separate view, because this component is the incident
+// history view in this codebase — it's the one place that already owns the
+// current severity/date-range filter state an export needs to match (AC3).
+export default function TimelineContainer({ fetchImpl = fetch, exportImpl = exportIncidentHistory }) {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [incidents, setIncidents] = useState([]);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
 
   const loadIncidents = useCallback(
     async (currentFilters) => {
@@ -55,6 +64,24 @@ export default function TimelineContainer({ fetchImpl = fetch }) {
     setFilters(EMPTY_FILTERS);
   }, []);
 
+  // Passes the same filters object currently driving the visible timeline
+  // (not a re-derived copy) so a downloaded file can never disagree with
+  // what's on screen, satisfying AC3.
+  const handleExport = useCallback(
+    async (format) => {
+      setIsExporting(true);
+      setExportError(null);
+      try {
+        await exportImpl({ format, ...filters });
+      } catch (err) {
+        setExportError(err.message);
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [exportImpl, filters]
+  );
+
   return (
     <div data-testid="timeline-container">
       <TimelineFilterBar
@@ -65,6 +92,7 @@ export default function TimelineContainer({ fetchImpl = fetch }) {
         onDateRangeChange={handleDateRangeChange}
         onClear={handleClear}
       />
+      <ExportMenu onSelect={handleExport} isExporting={isExporting} error={exportError} />
       <IncidentTimeline incidents={incidents} isLoading={status === 'loading'} error={error} />
     </div>
   );

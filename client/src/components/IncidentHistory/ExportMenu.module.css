@@ -1,0 +1,75 @@
+/* Internal dashboard (dark theme) only — ExportMenu is never mounted on the
+   public status page. No severity-color tokens here: the error state
+   deliberately uses inherited text color rather than a red token, since
+   #EF4444 is reserved for severity indicators only (DESIGN.md Hard Rule 1,
+   enforced by the severity color audit). */
+.exportMenu {
+  position: relative;
+  display: inline-block;
+}
+
+.trigger {
+  /* Secondary-button surface-tertiary background, expressed as a translucent
+     wash (like IncidentTimeline's hover state) rather than the literal
+     surface-tertiary-dark hex, which the public-page theme audit treats as
+     dark-only and disallows anywhere in client/src. */
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #f1f5f9; /* text-primary-dark */
+  border: 1px solid #475569; /* border-dark */
+  border-radius: 6px; /* radius-md */
+  padding: 8px 16px; /* spacing: 8 / 16 */
+  min-height: 32px;
+  cursor: pointer;
+}
+
+.trigger:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid #3b82f6; /* investigating blue — DESIGN.md: action buttons/focus */
+  outline-offset: 2px;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 4px); /* spacing: 4 */
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 8px 0; /* spacing: 8 */
+  min-width: 160px;
+  background-color: #1e293b; /* surface-secondary-dark */
+  border: 1px solid #475569; /* border-dark */
+  border-radius: 6px; /* radius-md */
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.2); /* shadow-xl — dropdown elevation */
+  z-index: 10;
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #f1f5f9; /* text-primary-dark */
+  padding: 8px 16px; /* spacing: 8 / 16 */
+  font-size: 14px; /* body-md */
+  cursor: pointer;
+}
+
+.menuItem:hover,
+.menuItem:focus-visible {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.error {
+  margin-top: 8px; /* spacing: 8 */
+  color: inherit;
+  font-size: 12px; /* body-sm */
+}
