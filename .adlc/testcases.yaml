@@ -635,3 +635,11 @@ cases:
     export: "computeBannerStatus"
     args: [[{"id": "1", "severity": "minor", "state": "investigating"}, {"id": "2", "severity": "major", "state": "acknowledged"}, {"id": "3", "severity": "critical", "state": "resolving"}]]
     expect: { equals: "resolving" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Public status page renders one section heading per distinct component category present in the data"
+    kind: "testcase"
+    skill_id: "SKILL_004"
+    epic_key: "PLB-7"
+    module: "client/src/publicStatusPage/utils/groupComponentsByCategory.js"
+    export: "groupComponentsByCategory"
+    args: [[{"id": 1, "name": "API Server", "category": "API"}, {"id": 2, "name": "MySQL", "category": "Database"}, {"id": 3, "name": "API Gateway", "category": "API"}, {"id": 4, "name": "Web Frontend", "category": "Frontend"}]]
+    expect: { equals: {'API': [{'id': 1, 'name': 'API Server', 'category': 'API'}, {'id': 3, 'name': 'API Gateway', 'category': 'API'}], 'Database': [{'id': 2, 'name': 'MySQL', 'category': 'Database'}], 'Frontend': [{'id': 4, 'name': 'Web Frontend', 'category': 'Frontend'}]} }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
