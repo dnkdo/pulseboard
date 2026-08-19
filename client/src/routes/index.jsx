@@ -2,14 +2,18 @@ import { Routes, Route } from 'react-router-dom';
 import StatusPage from '../status-page/StatusPage.jsx';
 import StatCardsDashboard from '../dashboard';
 import IncidentList from '../dashboard/incidentList.js';
+import TimelineContainer from '../components/timeline/TimelineContainer.jsx';
 
-// Internal dashboard shell at "/" — stat cards + incident list, unchanged
-// from the pre-routing App.jsx layout.
+// Internal dashboard shell at "/" — stat cards + incident list (unchanged
+// from the pre-routing App.jsx layout) plus the filterable incident timeline
+// (PLB-101) that owns its own severity/date-range filter state and refetches
+// GET /api/incidents server-side as filters change.
 function Dashboard() {
   return (
     <>
       <StatCardsDashboard />
       <IncidentList />
+      <TimelineContainer />
     </>
   );
 }

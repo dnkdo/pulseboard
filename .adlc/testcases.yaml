@@ -635,6 +635,22 @@ cases:
     export: "computeBannerStatus"
     args: [[{"id": "1", "severity": "minor", "state": "investigating"}, {"id": "2", "severity": "major", "state": "acknowledged"}, {"id": "3", "severity": "critical", "state": "resolving"}]]
     expect: { equals: "resolving" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: buildFilterQueryString({severity, startDate, endDate}) returns a query string containing only the provided, non-"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-7"
+    module: "client/src/utils/buildFilterQueryString.js"
+    export: "buildFilterQueryString"
+    args: [{"severity": "HIGH", "startDate": "2026-08-01", "endDate": ""}]
+    expect: { equals: "severity=HIGH&startDate=2026-08-01" }  # corrected: prior spec_autofix hallucinated an endDate never passed in, lowercased severity (impl never transforms case), and dropped the actually-provided startDate
+  - name: "covers: buildFilterQueryString({severity, startDate, endDate}) returns a query string containing only the provided, non-"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-7"
+    module: "client/src/utils/buildFilterQueryString.js"
+    export: "buildFilterQueryString"
+    args: [{"severity": "high", "startDate": "", "endDate": "2026-08-18"}]
+    expect: { equals: "severity=high&endDate=2026-08-18" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
   - name: "covers: TransitionHistory renders an empty-state message when given zero transitions"
     kind: "testcase"
     skill_id: "SKILL_004"

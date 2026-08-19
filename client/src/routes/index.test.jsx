@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom/vitest';
 import AppRoutes from './index.jsx';
@@ -97,5 +97,64 @@ describe('AppRoutes "/" — internal dashboard', () => {
     expect(screen.queryByTestId('status-banner')).not.toBeInTheDocument();
 
     delete global.fetch;
+  });
+});
+
+describe('AppRoutes "/" — incident timeline filters (PLB-101)', () => {
+  const ALL_INCIDENTS = [
+    { id: '1', title: 'API Latency Spike', severity: 'SEV1', state: 'open' },
+    { id: '2', title: 'Minor UI Glitch', severity: 'SEV3', state: 'resolved' },
+  ];
+
+  function mockDashboardFetch() {
+    return vi.fn((url) => {
+      if (url === '/api/stats') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ openIncidents: 1, mttr7d: 0, incidentsThisMonth: 1, uptimePercentage: 100 }),
+        });
+      }
+
+      // Both IncidentList and TimelineContainer hit GET /api/incidents; only
+      // TimelineContainer ever appends a query string (server-side filtering
+      // via server/utils/filterIncidents.js's severity contract).
+      const [, queryString] = url.split('?');
+      const severity = new URLSearchParams(queryString ?? '').get('severity');
+      const filtered = severity ? ALL_INCIDENTS.filter((incident) => incident.severity === severity) : ALL_INCIDENTS;
+      return Promise.resolve({ ok: true, json: async () => filtered });
+    });
+  }
+
+  afterEach(() => {
+    delete global.fetch;
+  });
+
+  it('AC: the dashboard route actually renders the severity/date filter bar above a live incident timeline', async () => {
+    global.fetch = mockDashboardFetch();
+
+    renderAt('/');
+
+    await waitFor(() => expect(screen.getByTestId('timeline-filter-bar')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('incident-timeline-entry-1')).toBeInTheDocument());
+    expect(screen.getByTestId('incident-timeline-entry-2')).toBeInTheDocument();
+  });
+
+  it('AC: selecting a severity on the real dashboard re-renders the timeline to only matching incidents, and Clear filters restores the full list', async () => {
+    global.fetch = mockDashboardFetch();
+
+    renderAt('/');
+
+    await waitFor(() => expect(screen.getByTestId('incident-timeline-entry-2')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByTestId('severity-dropdown'), { target: { value: 'SEV1' } });
+
+    await waitFor(() => expect(screen.queryByTestId('incident-timeline-entry-2')).not.toBeInTheDocument());
+    expect(screen.getByTestId('incident-timeline-entry-1')).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenLastCalledWith('/api/incidents?severity=SEV1');
+
+    fireEvent.click(screen.getByTestId('clear-filters-button'));
+
+    await waitFor(() => expect(screen.getByTestId('incident-timeline-entry-2')).toBeInTheDocument());
+    expect(screen.getByTestId('incident-timeline-entry-1')).toBeInTheDocument();
   });
 });
