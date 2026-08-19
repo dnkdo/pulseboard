@@ -43,3 +43,16 @@
   font-size: 14px; /* typography.body-md */
   color: #94a3b8; /* text-muted-light */
 }
+
+/* Navigation affordance only (PLB-99) — no layout/spacing/color changes to
+   the card itself, just cursor + elevation feedback on hover/focus using
+   shadow-lg from tokens.json. */
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover,
+.clickable:focus-visible {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.15); /* shadow-lg */
+  outline: none;
+}

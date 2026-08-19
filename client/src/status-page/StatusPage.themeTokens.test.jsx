@@ -13,6 +13,7 @@
 // from .adlc/design/tokens.json — and never to a dark-only one.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom/vitest';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -87,7 +88,11 @@ afterEach(() => {
 async function renderStatusPage({ incidents, components }) {
   fetchIncidents.mockResolvedValue(incidents);
   fetchComponents.mockResolvedValue(components);
-  const utils = render(<StatusPage />);
+  const utils = render(
+    <MemoryRouter>
+      <StatusPage />
+    </MemoryRouter>,
+  );
   await waitFor(() => expect(screen.queryAllByText(/Loading/i)).toHaveLength(0));
   return utils;
 }

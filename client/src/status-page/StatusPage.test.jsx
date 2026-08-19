@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, waitFor, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom/vitest';
 import StatusPage from './StatusPage.jsx';
 import { fetchComponents } from '../lib/api/components.js';
@@ -26,7 +27,11 @@ describe('StatusPage', () => {
     ]);
     fetchIncidents.mockResolvedValue([]);
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByRole('heading', { name: 'Component Status' })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('API')).toBeInTheDocument());
@@ -39,7 +44,11 @@ describe('StatusPage', () => {
       { id: '2', title: 'Old Outage', status: 'resolved', severity: 'SEV2', timestamp: '2026-01-02T00:00:00Z' },
     ]);
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByRole('heading', { name: 'Active Incidents' })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('API Down')).toBeInTheDocument());
@@ -66,7 +75,11 @@ describe('StatusPage', () => {
       },
     ]);
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByRole('heading', { name: 'Past Incidents' })).toBeInTheDocument();
     await waitFor(() => expect(screen.getAllByTestId('past-incident-row')).toHaveLength(2));
