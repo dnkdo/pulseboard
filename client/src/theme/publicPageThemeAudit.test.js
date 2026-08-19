@@ -129,6 +129,7 @@ describe('discoverStatusPageComponentFiles', () => {
         'client/src/components/StatusPageHeader.jsx',
         'client/src/components/StatusBanner.jsx',
         'client/src/components/ComponentHealthGrid.jsx',
+        'client/src/components/CategorySection.jsx',
         'client/src/components/HealthTile.jsx',
         'client/src/components/ActiveIncidentsList.jsx',
         'client/src/components/IncidentCard.jsx',
