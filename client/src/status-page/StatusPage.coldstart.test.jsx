@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, act, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom/vitest';
 import StatusPage from './StatusPage.jsx';
 import { fetchComponents } from '../lib/api/components.js';
@@ -37,7 +38,11 @@ describe('StatusPage cold start (PLB-76)', () => {
       },
     ]);
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     // Flush only pending microtasks from the immediate mount-time fetch —
     // zero timers advanced — to prove cold start doesn't wait for an
@@ -63,7 +68,11 @@ describe('StatusPage cold start (PLB-76)', () => {
     fetchComponents.mockReturnValue(new Promise(() => {}));
     fetchIncidents.mockReturnValue(new Promise(() => {}));
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText('Loading component status…')).toBeInTheDocument();
     expect(screen.getByText('Loading active incidents…')).toBeInTheDocument();

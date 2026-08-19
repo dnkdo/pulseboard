@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, act, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom/vitest';
 import StatusPage from './StatusPage.jsx';
 import { fetchComponents } from '../lib/api/components.js';
@@ -30,7 +31,11 @@ describe('StatusPage live update (PLB-76)', () => {
       { id: '1', title: 'API Down', status: 'investigating', severity: 'SEV1', resolvedAt: null },
     ]);
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
@@ -70,7 +75,11 @@ describe('StatusPage live update (PLB-76)', () => {
       { id: 'api', name: 'API', healthState: 'operational', uptimePercent: 100 },
     ]);
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
@@ -104,7 +113,11 @@ describe('StatusPage live update (PLB-76)', () => {
       { id: '1', title: 'API Down', status: 'investigating', severity: 'SEV1', resolvedAt: null },
     ]);
 
-    render(<StatusPage />);
+    render(
+      <MemoryRouter>
+        <StatusPage />
+      </MemoryRouter>,
+    );
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);

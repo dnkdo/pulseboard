@@ -1,8 +1,13 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, cleanup, act, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom/vitest';
 import ActiveIncidentsList from './ActiveIncidentsList.jsx';
+
+function renderWithRouter(ui) {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+}
 
 afterEach(() => {
   cleanup();
@@ -13,7 +18,7 @@ afterEach(() => {
 describe('ActiveIncidentsList', () => {
   it('renders nothing but an empty-state message when there are zero active incidents', async () => {
     const fetchImpl = vi.fn().mockResolvedValue([]);
-    render(<ActiveIncidentsList fetchImpl={fetchImpl} />);
+    renderWithRouter(<ActiveIncidentsList fetchImpl={fetchImpl} />);
 
     await waitFor(() => expect(screen.getByTestId('active-incidents-empty')).toBeInTheDocument());
     expect(screen.queryByTestId('incident-card')).not.toBeInTheDocument();
@@ -21,7 +26,7 @@ describe('ActiveIncidentsList', () => {
 
   it('renders exactly one card for a single active incident', async () => {
     const fetchImpl = vi.fn().mockResolvedValue([{ id: '1', title: 'API Down', status: 'open', severity: 'SEV1' }]);
-    render(<ActiveIncidentsList fetchImpl={fetchImpl} />);
+    renderWithRouter(<ActiveIncidentsList fetchImpl={fetchImpl} />);
 
     await waitFor(() => expect(screen.getAllByTestId('incident-card')).toHaveLength(1));
     expect(screen.getByText('API Down')).toBeInTheDocument();
@@ -33,7 +38,7 @@ describe('ActiveIncidentsList', () => {
       { id: '2', title: 'Total Outage', status: 'open', severity: 'SEV1' },
       { id: '3', title: 'Partial Outage', status: 'open', severity: 'SEV2' },
     ]);
-    render(<ActiveIncidentsList fetchImpl={fetchImpl} />);
+    renderWithRouter(<ActiveIncidentsList fetchImpl={fetchImpl} />);
 
     await waitFor(() => expect(screen.getAllByTestId('incident-card')).toHaveLength(3));
     const titles = screen.getAllByTestId('incident-card').map((card) => card.textContent);
@@ -49,7 +54,7 @@ describe('ActiveIncidentsList', () => {
       .mockResolvedValueOnce([{ id: '1', title: 'API Down', status: 'open', severity: 'SEV1' }])
       .mockResolvedValueOnce([{ id: '1', title: 'API Down', status: 'resolved', severity: 'SEV1' }]);
 
-    render(<ActiveIncidentsList pollIntervalMs={15000} fetchImpl={fetchImpl} />);
+    renderWithRouter(<ActiveIncidentsList pollIntervalMs={15000} fetchImpl={fetchImpl} />);
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);
