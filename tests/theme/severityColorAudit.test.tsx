@@ -22,6 +22,7 @@ const COMPONENT_FILES = Object.freeze({
   Header: 'client/src/components/StatusPageHeader.jsx',
   Banner: 'client/src/components/StatusBanner.jsx',
   ComponentHealthGrid: 'client/src/components/ComponentHealthGrid.jsx',
+  CategorySection: 'client/src/components/CategorySection.jsx',
   HealthTile: 'client/src/components/HealthTile.jsx',
   ActiveIncidentsList: 'client/src/components/ActiveIncidentsList.jsx',
   IncidentCard: 'client/src/components/IncidentCard.jsx',

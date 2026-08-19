@@ -1,0 +1,16 @@
+/* Public status page (light theme) — one category section: heading plus a
+   responsive 2-4 column component tile grid, per DESIGN.md's Component grid
+   layout pattern (grouped by category, PLB-103). */
+.heading {
+  font-size: 20px; /* typography.h3 */
+  font-weight: 600; /* typography.h3 weight */
+  line-height: 28px; /* typography.h3 lineHeight */
+  color: #1e293b; /* text-primary-light */
+  margin: 0 0 12px; /* spacing: 12 (card internal spacing) */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px; /* spacing: 20 (stat/tile gaps) */
+}

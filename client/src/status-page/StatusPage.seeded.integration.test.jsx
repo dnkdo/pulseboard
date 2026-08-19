@@ -75,6 +75,40 @@ describe('Public status page — fresh seeded database (PLB-78)', () => {
     }
   });
 
+  it('AC (PLB-103): groups the real seeded component payload into one heading per category, each tile once, no empty sections', async () => {
+    render(
+      <MemoryRouter initialEntries={['/status']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    );
+
+    const grid = await screen.findByTestId('component-health-grid');
+
+    // Seed fixtures (server/data/components.json) ship 6 components across
+    // exactly 3 categories (API, Web, Infrastructure) — 2 components each.
+    await waitFor(() => expect(within(grid).getAllByTestId('category-section')).toHaveLength(3));
+
+    const headingNames = within(grid)
+      .getAllByRole('heading', { level: 3 })
+      .map((heading) => heading.textContent)
+      .sort();
+    expect(headingNames).toEqual(['API', 'Infrastructure', 'Web']);
+
+    // A category absent from the seed data must not render a section.
+    expect(within(grid).queryByRole('heading', { name: 'Database' })).not.toBeInTheDocument();
+
+    for (const name of [
+      'Core API',
+      'Authentication API',
+      'Public Status Page',
+      'Internal Dashboard',
+      'Primary Database',
+      'Load Balancer',
+    ]) {
+      expect(within(grid).getAllByText(name)).toHaveLength(1);
+    }
+  });
+
   it('AC: is reachable without authentication — no cookie/session is set and the real API never returns 401/403', async () => {
     expect(document.cookie).toBe('');
 

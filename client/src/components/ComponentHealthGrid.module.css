@@ -1,8 +1,11 @@
-/* Public status page (light theme) — responsive 2-4 column component grid, per DESIGN.md */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px; /* spacing: 20 (stat/tile gaps) */
+/* Public status page (light theme) — vertical stack of per-category
+   sections (PLB-103); each section's own responsive 2-4 column tile grid
+   lives in CategorySection.module.css, per DESIGN.md's Component grid
+   layout pattern. */
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* spacing: 24 (vertical section spacing) */
 }
 
 .message {
