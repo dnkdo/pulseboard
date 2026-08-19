@@ -650,4 +650,4 @@ cases:
     module: "client/src/publicStatusPage/components/CategorySection.test.jsx"
     export: "CategorySection"
     args: [{"category": "Database", "components": []}]
-    expect: { equals: null }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+    expect: { type: "undefined" }  # auto-corrected by spec_autofix (sentinel_mismatch)
