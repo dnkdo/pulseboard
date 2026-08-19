@@ -1,0 +1,55 @@
+/* Public status page (light theme) incident detail view — DESIGN.md Cards +
+   Badges & Chips rules, restated for a full-page section rather than a card. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px; /* spacing: 24 (section gaps) */
+}
+
+.title {
+  font-size: 20px; /* typography.h3 size */
+  font-weight: 600; /* typography.h3 weight */
+  color: #1e293b; /* text-primary-light */
+}
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* spacing: 8 */
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px; /* label badge padding */
+  border-radius: 4px; /* radius-sm */
+  font-size: 12px; /* typography.label size */
+  font-weight: 600; /* typography.label weight */
+  color: #ffffff;
+}
+
+.fields dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px; /* spacing: 4, 16 */
+}
+
+.message {
+  font-size: 14px; /* typography.body-md */
+  color: #475569; /* text-secondary-light */
+}
+
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px; /* spacing: 12 */
+  padding: 16px; /* spacing: 16 */
+  border-radius: 8px; /* radius-lg */
+  background-color: #f8fafc; /* surface-secondary-light */
+  border: 1px solid #e2e8f0; /* border-light */
+}
+
+.backLink {
+  font-size: 14px; /* typography.body-md */
+  color: #3b82f6; /* status-investigating, reused here as the standard link color */
+}
