@@ -763,3 +763,11 @@ cases:
     export: "loadSeedDataIfEmpty"
     args: ["freshEmptyDb"]
     expect: { type: "object" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: Root package.json declares workspaces including client and server"
+    kind: "testcase"
+    skill_id: "SKILL_001"
+    epic_key: "PLB-1"
+    module: "package.json"
+    export: "workspaces"
+    args: []
+    expect: { equals: ['client', 'server'] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
