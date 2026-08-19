@@ -771,3 +771,11 @@ cases:
     export: "workspaces"
     args: []
     expect: { equals: ['client', 'server'] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: client/package.json lists vite as a devDependency"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-1"
+    module: "client/package.json"
+    export: "devDependencies.vite"
+    args: []
+    expect: { type: "string" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
