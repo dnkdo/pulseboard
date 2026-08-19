@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom';
+import styles from './IncidentTimeline.module.css';
+
 function formatTimestamp(raw) {
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) {
@@ -36,9 +39,11 @@ export default function IncidentTimeline({ incidents, isLoading, error }) {
           data-testid={`incident-timeline-entry-${incident.id}`}
           data-severity={incident.severity}
         >
-          <span data-testid="incident-timeline-severity">{incident.severity}</span>
-          <span data-testid="incident-timeline-title">{incident.title}</span>
-          <span data-testid="incident-timeline-timestamp">{formatTimestamp(incident.createdAt)}</span>
+          <Link to={`/incidents/${incident.id}`} className={styles.entryLink}>
+            <span data-testid="incident-timeline-severity">{incident.severity}</span>
+            <span data-testid="incident-timeline-title">{incident.title}</span>
+            <span data-testid="incident-timeline-timestamp">{formatTimestamp(incident.createdAt)}</span>
+          </Link>
         </li>
       ))}
     </ul>
