@@ -9,7 +9,7 @@
 // GET / and GET /api/health both currently succeed — these tests pin that
 // behavior at the handler and app-integration level so a future change can't
 // silently reintroduce any of those failure modes.
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import healthRouter from '../../server/routes/health.js';
@@ -119,5 +119,46 @@ describe('GET /api/health resilience when required env vars are unset (PLB-165 p
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ status: 'ok' });
+  });
+});
+
+// PLB-166 regression coverage: componentsRouter (src/routes/componentsRoutes.js)
+// was the last remaining *static* top-level import in server/src/app.js —
+// everything else that isn't required for liveness (the db chain) had
+// already been converted to a guarded dynamic import for PLB-163. A static
+// import's module-evaluation throw crashes the whole serverless function
+// before Express finishes being configured, taking GET /api/health down
+// with it, exactly like the db-import failure class PLB-163 fixed. This
+// pins that componentsRouter is now loaded the same guarded way, so a future
+// throw anywhere in its import chain degrades only '/api/components'.
+describe('GET /api/health resilience to components-router startup failures (PLB-166)', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('still returns 200 on GET /api/health when the components router fails to import', async () => {
+    vi.doMock('../../src/routes/componentsRoutes.js', () => {
+      throw new Error('componentsRoutes.js failed to import');
+    });
+
+    const { default: freshApp } = await import('../../server/src/app.js');
+    const res = await request(freshApp).get('/api/health');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ status: 'ok' });
+  });
+
+  it('degrades only /api/components (503), not health, when the components router import throws', async () => {
+    vi.doMock('../../src/routes/componentsRoutes.js', () => {
+      throw new Error('componentsRoutes.js failed to import');
+    });
+
+    const { default: freshApp } = await import('../../server/src/app.js');
+
+    const healthRes = await request(freshApp).get('/api/health');
+    expect(healthRes.status).toBe(200);
+
+    const componentsRes = await request(freshApp).get('/api/components');
+    expect(componentsRes.status).toBe(503);
   });
 });

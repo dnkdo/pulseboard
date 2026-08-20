@@ -1,7 +1,6 @@
 import express from 'express';
 import { createStatsRouter } from './routes/stats.js';
 import { createIncidentsRouter } from './routes/incidents.js';
-import componentsRouter from '../../src/routes/componentsRoutes.js';
 import healthRouter from '../routes/health.js';
 
 const app = express();
@@ -47,6 +46,25 @@ try {
 
 app.use('/api/stats', createStatsRouter(db));
 app.use('/api/incidents', createIncidentsRouter(db));
-app.use('/api/components', componentsRouter);
+
+// PLB-166: componentsRouter used to be a static top-level
+// `import componentsRouter from '../../src/routes/componentsRoutes.js'`.
+// That import chain doesn't touch the DB today, but it's still evaluated
+// before Express finishes being configured — the same crash shape already
+// fixed for the db import above (PLB-163): any future throw anywhere in
+// that chain's module evaluation (componentsController.js,
+// server/models/component.js, or something they later import) would take
+// down the whole serverless function, including GET /api/health, before a
+// single route handler runs. Loading it the same way as the db import keeps
+// '/api/components' as the only route that degrades on failure.
+try {
+  const { default: componentsRouter } = await import('../../src/routes/componentsRoutes.js');
+  app.use('/api/components', componentsRouter);
+} catch (error) {
+  console.error('Components module failed to load at startup:', error);
+  app.use('/api/components', (req, res) => {
+    res.status(503).json({ error: 'Components service unavailable' });
+  });
+}
 
 export default app;
