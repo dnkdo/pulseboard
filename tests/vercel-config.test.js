@@ -134,6 +134,71 @@ describe('local vercel build', () => {
     );
   }, 150_000);
 
+  // Regression test for PLB-164: production smoke checks kept getting a 500
+  // (FUNCTION_INVOCATION_FAILED — a crashed function, not an app-level error
+  // response) on GET /api/health. server/tests/health.test.js (PLB-163)
+  // already proves the *source* module graph degrades gracefully when the db
+  // import chain throws, by using vi.doMock to fake the failure at the ESM
+  // module-registry level. That's a real gap: it can't catch a failure mode
+  // introduced by Vercel's own build step, e.g. a better-sqlite3 native
+  // binding bundled for the wrong Node ABI (`npm install` compiling it under
+  // one Node major version, the deployed function running another) — which
+  // is a real risk here, since `vercel build`'s own dependency install step
+  // does not necessarily run under the same Node version as the CI/deploy
+  // workflow's pinned actions/setup-node step. This test closes that gap by
+  // building the actual deployable function with a real `vercel build`,
+  // corrupting *that* artifact's own bundled native binding the same way a
+  // bad prebuild would, and asserting GET /api/health on that exact bundle
+  // still returns 200 rather than crashing the function.
+  it.skipIf(isRecursedRun)(
+    'GET /api/health on the real built function artifact returns 200 even when its bundled db native binding is broken',
+    () => {
+      execFileSync(vercelBin, ['build', '--yes'], {
+        cwd: repoRoot,
+        encoding: 'utf-8',
+        timeout: 120_000,
+      });
+
+      const config = readJson('vercel.json');
+      const serverBuild = config.builds.find((b) => b.use === '@vercel/node');
+      const funcDir = path.join(repoRoot, '.vercel', 'output', 'functions', `${serverBuild.src}.func`);
+      const bundledAppPath = path.join(funcDir, serverBuild.src);
+      expect(existsSync(bundledAppPath)).toBe(true);
+
+      const bindingPath = path.join(
+        funcDir,
+        'node_modules',
+        'better-sqlite3',
+        'build',
+        'Release',
+        'better_sqlite3.node',
+      );
+      expect(existsSync(bindingPath)).toBe(true);
+
+      const original = readFileSync(bindingPath);
+      writeFileSync(bindingPath, Buffer.from('corrupted-not-a-real-native-binding-plb-164'));
+
+      try {
+        const script = `
+          import request from 'supertest';
+          const { default: app } = await import(${JSON.stringify(bundledAppPath)});
+          const health = await request(app).get('/api/health');
+          console.log('HEALTH_STATUS:' + health.status);
+        `;
+        const result = execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+          cwd: repoRoot,
+          encoding: 'utf-8',
+          timeout: 15_000,
+        });
+
+        expect(result).toContain('HEALTH_STATUS:200');
+      } finally {
+        writeFileSync(bindingPath, original);
+      }
+    },
+    150_000,
+  );
+
   it.skipIf(isRecursedRun)('fails with a non-zero exit code on an invalid build config', () => {
     const invalidConfigPath = path.join(repoRoot, '.vercel-invalid-test.json');
     writeFileSync(
