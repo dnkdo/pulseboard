@@ -771,3 +771,27 @@ cases:
     export: "workspaces"
     args: []
     expect: { equals: ['client', 'server'] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: client/package.json lists react and react-dom as dependencies"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-1"
+    module: "client/package.json"
+    export: "dependencies"
+    args: []
+    expect: { contains: ['react', 'react-dom'] }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: client/package.json lists vite as a devDependency"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-1"
+    module: "client/package.json"
+    export: "default"
+    args: []
+    expect: { contains: "vite" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
+  - name: "covers: client/vite.config.js exists and configures the React plugin"
+    kind: "testcase"
+    skill_id: "SKILL_002"
+    epic_key: "PLB-1"
+    module: "client/vite.config.js"
+    export: "default"
+    args: []
+    expect: { contains: "vite:react" }  # AI-proposed, human-approved — covers a previously-untested acceptance criterion
