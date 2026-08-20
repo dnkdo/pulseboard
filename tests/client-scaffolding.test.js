@@ -35,6 +35,11 @@ describe('client/package.json dependencies', () => {
     expect(pkg.devDependencies['react-dom']).toBeUndefined();
     expect(pkg.dependencies.vite).toBeUndefined();
   });
+
+  it('declares a top-level vite field pinning the toolchain version', () => {
+    expect(pkg).toHaveProperty('vite');
+    expect(pkg.vite).toBe(pkg.devDependencies.vite);
+  });
 });
 
 describe('client/vite.config.js', () => {
