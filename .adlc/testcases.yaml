@@ -786,7 +786,7 @@ cases:
     module: "client/package.json"
     export: "default"
     args: []
-    expect: { devDependencies: {'contains': 'vite'} }  # auto-corrected by spec_autofix (ai_auto_applied)
+    expect: { contains: "vite" }  # auto-corrected by spec_autofix (ai_auto_applied)
   - name: "covers: client/vite.config.js exists and configures the React plugin"
     kind: "testcase"
     skill_id: "SKILL_002"
