@@ -128,16 +128,19 @@ describe('DB initialization failure does not crash module import or take down /a
     expect(result.stdout).toContain('STATS_STATUS:200');
   });
 
-  it('with an unwritable PLB_DB_PATH, the process does not crash and /api/health still returns 200', () => {
+  it('with an unwritable PLB_DB_PATH, the process does not crash and both /api/health and /api/stats still return 200', () => {
     const result = runHealthProbeScript({ PLB_DB_PATH: '/nonexistent-dir-plb-162/db.sqlite' });
 
     // The process itself must exit cleanly (the module import must not throw
     // synchronously and kill the whole function) even though the DB is down.
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('HEALTH_STATUS:200');
-    // A DB-backed route is allowed to fail when the DB is genuinely down —
-    // it just must not take the whole process/module down with it.
-    expect(result.stdout).toContain('STATS_STATUS:500');
+    // PLB-168: a DB-backed route used to be allowed to 500 when the DB was
+    // genuinely down, as long as it didn't take the whole process with it.
+    // That was itself a production bug (GET /api/stats 500ing on Vercel) —
+    // it now falls back to the same seed-backed data GET /api/components
+    // already reads directly, so it degrades to 200 instead of 500.
+    expect(result.stdout).toContain('STATS_STATUS:200');
   });
 });
 

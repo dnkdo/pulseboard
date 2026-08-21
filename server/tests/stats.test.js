@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
 import { initDatabase } from '../../src/models/db.js';
+import { loadSeedIncidents } from '../../src/models/seed.js';
 import {
   createStatsRouter,
   computeWindowUptimePercentage,
@@ -277,6 +278,67 @@ describe('GET /api/stats', () => {
       expect(res.body.uptime).toBeLessThan(res.body.uptimePercentage);
       expect(res.body.uptimePercentage).toBe(100);
     });
+  });
+});
+
+describe('GET /api/stats — PLB-168: db unavailable (e.g. Vercel native-binding failure)', () => {
+  // Mirrors production: server/src/app.js passes `db = null` when
+  // src/index.js's initDatabase()/seedIfFresh() throws at startup. Before
+  // PLB-168 this crashed with "Cannot read properties of null (reading
+  // 'prepare')", surfaced to callers as an unhandled Express 500.
+  it('returns 200 with seed-backed stats instead of throwing on a null db', async () => {
+    const res = await request(buildApp(null)).get('/api/stats');
+
+    expect(res.status).toBe(200);
+    expect(typeof res.body.openCount).toBe('number');
+    expect(typeof res.body.mttrMinutes).toBe('number');
+    expect(typeof res.body.incidentsThisMonth).toBe('number');
+    expect(typeof res.body.uptime).toBe('number');
+  });
+
+  it('derives openCount from the same seed fixtures GET /api/components reads', async () => {
+    const seedIncidents = loadSeedIncidents();
+    const expectedOpenCount = seedIncidents.filter((incident) => incident.state !== 'resolved').length;
+
+    const res = await request(buildApp(null)).get('/api/stats');
+
+    expect(res.body.openCount).toBe(expectedOpenCount);
+  });
+
+  it('returns a structured 500 JSON body instead of an unhandled crash when an unexpected error occurs', async () => {
+    const brokenDb = {
+      prepare: () => {
+        throw new Error('simulated unexpected failure');
+      },
+    };
+
+    const res = await request(buildApp(brokenDb)).get('/api/stats');
+
+    expect(res.status).toBe(500);
+    expect(res.headers['content-type']).toMatch(/^application\/json/);
+    expect(res.body).toEqual({ error: 'Failed to compute stats' });
+  });
+
+  it('stays healthy across repeated requests against the same null-db app (simulates a warm serverless lambda)', async () => {
+    // Fixed system time: uptime/mttr are computed against `now` on every
+    // request (no caching, by design), so without a frozen clock two calls a
+    // few ms apart legitimately differ in their last few floating-point
+    // digits. Freezing time isolates the thing this test actually checks —
+    // repeated requests against a null db keep succeeding, not re-crashing
+    // or re-throwing on a second call.
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-13T12:00:00.000Z'));
+
+    const app = buildApp(null);
+
+    const first = await request(app).get('/api/stats');
+    const second = await request(app).get('/api/stats');
+
+    vi.useRealTimers();
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(second.body).toEqual(first.body);
   });
 });
 

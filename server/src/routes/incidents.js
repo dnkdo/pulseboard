@@ -45,67 +45,96 @@ export function createIncidentsRouter(db) {
   // Registered ahead of any future '/:id' route so 'export' is never
   // captured as an incident id. Unrecognized or omitted formats default to JSON.
   router.get('/export', (req, res) => {
-    const { format } = req.query;
-    const requestedFormat = format === undefined ? 'json' : String(format).toLowerCase();
-    const normalizedFormat = Object.prototype.hasOwnProperty.call(EXPORT_CONTENT_TYPES, requestedFormat)
-      ? requestedFormat
-      : 'json';
+    try {
+      const { format } = req.query;
+      const requestedFormat = format === undefined ? 'json' : String(format).toLowerCase();
+      const normalizedFormat = Object.prototype.hasOwnProperty.call(EXPORT_CONTENT_TYPES, requestedFormat)
+        ? requestedFormat
+        : 'json';
 
-    const incidents = getAllIncidents(db);
-    const body = normalizedFormat === 'csv' ? toCSV(incidents) : toJSON(incidents);
+      // getAllIncidents falls back to the seed fixtures when db is null
+      // (PLB-168) — see server/store/incidentStore.js.
+      const incidents = getAllIncidents(db);
+      const body = normalizedFormat === 'csv' ? toCSV(incidents) : toJSON(incidents);
 
-    res.set('Content-Type', EXPORT_CONTENT_TYPES[normalizedFormat]);
-    res.set('Content-Disposition', `attachment; filename="incidents.${normalizedFormat}"`);
-    res.status(200).send(body);
+      res.set('Content-Type', EXPORT_CONTENT_TYPES[normalizedFormat]);
+      res.set('Content-Disposition', `attachment; filename="incidents.${normalizedFormat}"`);
+      res.status(200).send(body);
+    } catch (error) {
+      console.error('GET /api/incidents/export failed:', error);
+      res.status(500).json({ error: 'Failed to export incidents' });
+    }
   });
 
   router.get('/:id', getIncidentById(db));
 
   router.get('/', listIncidents(db));
 
+  // PLB-168: creating/mutating incidents requires a writable, persistent
+  // store — unlike the GET routes above, there's no meaningful seed-backed
+  // fallback for a write. Fail fast with a structured JSON error instead of
+  // throwing on `null.prepare` when db failed to initialize at startup.
   router.post('/', (req, res) => {
-    const { title, severity, affected_components: affectedComponents, summary } = req.body ?? {};
-
-    const invalidFields = validateIncident({
-      title,
-      severity,
-      components: affectedComponents,
-      summary,
-    });
-
-    if (invalidFields.length > 0) {
-      return res.status(400).json({ errors: buildValidationErrors(invalidFields) });
+    if (!db) {
+      return res.status(503).json({ error: 'Incident creation is unavailable: database not initialized' });
     }
 
-    const incident = createIncident(db, { title, severity, affected_components: affectedComponents, summary });
-    return res.status(201).json(incident);
+    try {
+      const { title, severity, affected_components: affectedComponents, summary } = req.body ?? {};
+
+      const invalidFields = validateIncident({
+        title,
+        severity,
+        components: affectedComponents,
+        summary,
+      });
+
+      if (invalidFields.length > 0) {
+        return res.status(400).json({ errors: buildValidationErrors(invalidFields) });
+      }
+
+      const incident = createIncident(db, { title, severity, affected_components: affectedComponents, summary });
+      return res.status(201).json(incident);
+    } catch (error) {
+      console.error('POST /api/incidents failed:', error);
+      return res.status(500).json({ error: 'Failed to create incident' });
+    }
   });
 
   router.patch('/:id', (req, res) => {
-    const { id } = req.params;
-    const { state: nextState } = req.body ?? {};
-
-    const incident = db.prepare('SELECT * FROM incidents WHERE id = ?').get(id);
-    if (!incident) {
-      return res.status(404).json({ error: `Incident '${id}' not found` });
+    if (!db) {
+      return res.status(503).json({ error: 'Incident transitions are unavailable: database not initialized' });
     }
 
-    if (!isValidTransition(incident.state, nextState)) {
-      return res
-        .status(400)
-        .json({ error: `Cannot transition incident from '${incident.state}' to '${nextState}'` });
+    try {
+      const { id } = req.params;
+      const { state: nextState } = req.body ?? {};
+
+      const incident = db.prepare('SELECT * FROM incidents WHERE id = ?').get(id);
+      if (!incident) {
+        return res.status(404).json({ error: `Incident '${id}' not found` });
+      }
+
+      if (!isValidTransition(incident.state, nextState)) {
+        return res
+          .status(400)
+          .json({ error: `Cannot transition incident from '${incident.state}' to '${nextState}'` });
+      }
+
+      const now = new Date().toISOString();
+
+      db.prepare('UPDATE incidents SET state = ?, updated_at = ? WHERE id = ?').run(nextState, now, id);
+      db.prepare(
+        `INSERT INTO incident_state_transitions (incident_id, from_state, to_state, transitioned_at)
+         VALUES (?, ?, ?, ?)`
+      ).run(id, incident.state, nextState, now);
+
+      const updated = db.prepare('SELECT * FROM incidents WHERE id = ?').get(id);
+      res.status(200).json(updated);
+    } catch (error) {
+      console.error('PATCH /api/incidents/:id failed:', error);
+      res.status(500).json({ error: 'Failed to transition incident' });
     }
-
-    const now = new Date().toISOString();
-
-    db.prepare('UPDATE incidents SET state = ?, updated_at = ? WHERE id = ?').run(nextState, now, id);
-    db.prepare(
-      `INSERT INTO incident_state_transitions (incident_id, from_state, to_state, transitioned_at)
-       VALUES (?, ?, ?, ?)`
-    ).run(id, incident.state, nextState, now);
-
-    const updated = db.prepare('SELECT * FROM incidents WHERE id = ?').get(id);
-    res.status(200).json(updated);
   });
 
   return router;

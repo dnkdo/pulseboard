@@ -59,7 +59,11 @@ describe('GET /api/health resilience to database startup failures (PLB-163)', ()
     expect(res.body).toEqual({ status: 'ok' });
   });
 
-  it('degrades only the DB-backed routes, not health, when the db import throws', async () => {
+  // PLB-168: a db import failure used to take GET /api/stats down with a
+  // non-200 (still not a full function crash, but still a broken endpoint
+  // for callers). It now falls back to the same seed fixtures
+  // GET /api/components already reads directly, same as GET /api/health.
+  it('keeps both /api/health and /api/stats at 200 when the db import throws', async () => {
     vi.doMock('../../src/index.js', () => {
       throw new Error('better-sqlite3: native binding failed to load for this runtime');
     });
@@ -70,6 +74,6 @@ describe('GET /api/health resilience to database startup failures (PLB-163)', ()
     expect(healthRes.status).toBe(200);
 
     const statsRes = await request(freshApp).get('/api/stats');
-    expect(statsRes.status).not.toBe(200);
+    expect(statsRes.status).toBe(200);
   });
 });
