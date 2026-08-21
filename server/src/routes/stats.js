@@ -5,6 +5,7 @@ import { Router } from 'express';
 import { computeStatCards } from '../../../src/lib/stats.js';
 import { calculateUptime } from '../../../src/services/uptime.js';
 import { computeMTTR, computeOpenCount, computeIncidentsThisMonth } from '../../../src/services/stats.js';
+import { loadSeedIncidents } from '../../../src/models/seed.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UPTIME_WINDOW_MS = 30 * DAY_MS;
@@ -59,25 +60,36 @@ export function createStatsRouter(db) {
   const router = Router();
 
   router.get('/', (req, res) => {
-    const incidents = db.prepare('SELECT * FROM incidents').all();
-    const now = new Date();
-    const uptimePercentage = computeWindowUptimePercentage(incidents, now);
-    const stats = computeStatCards(incidents, uptimePercentage, now);
+    try {
+      // PLB-168: `db` is null when SQLite init failed at startup (e.g. the
+      // better-sqlite3 native binding not loading in the Vercel serverless
+      // runtime). Fall back to the same deterministic seed fixtures
+      // GET /api/components already reads directly rather than crashing on
+      // `null.prepare` — the seed JSON rows are already shaped exactly like
+      // `SELECT * FROM incidents` rows (see src/models/seed.js).
+      const incidents = db ? db.prepare('SELECT * FROM incidents').all() : loadSeedIncidents();
+      const now = new Date();
+      const uptimePercentage = computeWindowUptimePercentage(incidents, now);
+      const stats = computeStatCards(incidents, uptimePercentage, now);
 
-    res.status(200).json({
-      // Legacy PLB-79 dashboard stat-card fields (openIncidents, mttr7d — a
-      // trailing-7-day windowed MTTR, incidentsThisMonth, uptimePercentage — a
-      // trailing-30-day windowed uptime). Kept as-is because
-      // client/src/dashboard/index.js already consumes these field names;
-      // they are NOT the fields that satisfy the PLB-71 acceptance criteria.
-      ...stats,
-      // PLB-71 acceptance-criteria fields: exact, non-windowed aggregates
-      // computed by the pure functions in src/services/stats.js.
-      mttrMinutes: computeMTTR(incidents),
-      openCount: computeOpenCount(incidents),
-      incidentsThisMonth: computeIncidentsThisMonth(incidents, now),
-      uptime: computeOverallUptimePercentage(incidents, now),
-    });
+      res.status(200).json({
+        // Legacy PLB-79 dashboard stat-card fields (openIncidents, mttr7d — a
+        // trailing-7-day windowed MTTR, incidentsThisMonth, uptimePercentage — a
+        // trailing-30-day windowed uptime). Kept as-is because
+        // client/src/dashboard/index.js already consumes these field names;
+        // they are NOT the fields that satisfy the PLB-71 acceptance criteria.
+        ...stats,
+        // PLB-71 acceptance-criteria fields: exact, non-windowed aggregates
+        // computed by the pure functions in src/services/stats.js.
+        mttrMinutes: computeMTTR(incidents),
+        openCount: computeOpenCount(incidents),
+        incidentsThisMonth: computeIncidentsThisMonth(incidents, now),
+        uptime: computeOverallUptimePercentage(incidents, now),
+      });
+    } catch (error) {
+      console.error('GET /api/stats failed:', error);
+      res.status(500).json({ error: 'Failed to compute stats' });
+    }
   });
 
   return router;

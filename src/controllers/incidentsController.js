@@ -42,26 +42,36 @@ function parseSeverityParam(raw) {
 // server/src/routes/incidents.js router.
 export function listIncidents(db) {
   return (req, res) => {
-    const { severity, startDate, endDate } = req.query;
+    try {
+      const { severity, startDate, endDate } = req.query;
 
-    const filtered = filterIncidents(getAllIncidents(db), {
-      severity: parseSeverityParam(severity),
-      startDate,
-      endDate,
-    });
+      const filtered = filterIncidents(getAllIncidents(db), {
+        severity: parseSeverityParam(severity),
+        startDate,
+        endDate,
+      });
 
-    res.status(200).json(filtered.map((incident) => serializeIncident(withStateHistory(db, incident))));
+      res.status(200).json(filtered.map((incident) => serializeIncident(withStateHistory(db, incident))));
+    } catch (error) {
+      console.error('GET /api/incidents failed:', error);
+      res.status(500).json({ error: 'Failed to list incidents' });
+    }
   };
 }
 
 export function getIncidentById(db) {
   return (req, res) => {
-    const incident = findIncidentById(db, req.params.id);
+    try {
+      const incident = findIncidentById(db, req.params.id);
 
-    if (!incident) {
-      return res.status(404).json({ error: 'Incident not found' });
+      if (!incident) {
+        return res.status(404).json({ error: 'Incident not found' });
+      }
+
+      res.status(200).json(serializeIncident(withStateHistory(db, incident)));
+    } catch (error) {
+      console.error('GET /api/incidents/:id failed:', error);
+      res.status(500).json({ error: 'Failed to get incident' });
     }
-
-    res.status(200).json(serializeIncident(withStateHistory(db, incident)));
   };
 }
